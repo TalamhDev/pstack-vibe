@@ -1,0 +1,135 @@
+#!/bin/sh
+# control-pstack — drive a pstack install in a disposable VIBE_HOME.
+#
+# usage: control-pstack <launch|doctor|drive|sheet|cleanup|status> [args]
+#
+# Every command works inside $RUN_DIR (default /tmp/pstack-verify-<id>) and
+# never touches the real ~/.vibe. Proof artifacts survive cleanup.
+set -eu
+
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/../../.." && pwd)
+
+RUN_ID=${RUN_ID:-$(date +%Y%m%d-%H%M%S)-$$}
+RUN_DIR=${RUN_DIR:-/tmp/pstack-verify-$RUN_ID}
+VHOME="$RUN_DIR/home"
+SCRATCH="$RUN_DIR/scratch"
+ART="$RUN_DIR/artifacts"
+SRC_HOME=${SRC_HOME:-${HOME:-}/.vibe}
+
+die() { printf 'control-pstack: %s\n' "$*" >&2; exit 1; }
+
+cmd_launch() {
+  [ -d "$ROOT/generated/vibe" ] || die "no generated plugin at $ROOT/generated/vibe"
+  [ -f "$SRC_HOME/config.toml" ] || die "no $SRC_HOME/config.toml; run /pstack:setup-pstack first"
+  [ -f "$SRC_HOME/pstack-models.md" ] || die "no $SRC_HOME/pstack-models.md; run /pstack:setup-pstack first"
+
+  mkdir -p "$VHOME/agents" "$SCRATCH" "$ART"
+  cp "$SRC_HOME/config.toml" "$VHOME/config.toml"
+  cp "$SRC_HOME/pstack-models.md" "$VHOME/pstack-models.md"
+  for profile in "$SRC_HOME"/agents/pstack-*.toml; do
+    [ -e "$profile" ] || continue
+    cp "$profile" "$VHOME/agents/"
+  done
+
+  if [ ! -d "$ROOT/node_modules" ]; then
+    printf 'installing node deps (one time)\n'
+    ( cd "$ROOT" && npm install )
+  fi
+
+  ( cd "$ROOT" && VIBE_HOME="$VHOME" ./scripts/install.sh install )
+  printf 'run dir: %s\n' "$RUN_DIR"
+}
+
+cmd_doctor() {
+  [ -d "$VHOME" ] || die "no run at $RUN_DIR; run 'control-pstack launch' first"
+  ( cd "$ROOT" && VIBE_HOME="$VHOME" ./scripts/install.sh doctor )
+}
+
+# Write a scratch sheet whose security-review role names $1, so a session answer
+# proves the hook read THIS sheet rather than the real ~/.vibe one.
+cmd_sheet() {
+  [ $# -ge 1 ] || die "usage: control-pstack sheet <profile>"
+  [ -d "$SCRATCH" ] || die "no run at $RUN_DIR; run 'control-pstack launch' first"
+  mkdir -p "$SCRATCH/.vibe"
+  {
+    printf '# pstack model configuration\n'
+    printf '# defaults: 2\n'
+    printf '# budget: large (high)\n'
+    printf '# parent: deepseek-flash\n'
+    printf '# deepseek: deepseek-flash\n'
+    printf '# glm: glm-5-3\n'
+    printf '# ml4: ml4\n'
+    printf 'security review: %s\n' "$1"
+  } > "$SCRATCH/.vibe/pstack-models.md"
+  printf 'planted %s/.vibe/pstack-models.md with security review: %s\n' "$SCRATCH" "$1"
+}
+
+cmd_drive() {
+  [ $# -ge 1 ] || die "usage: control-pstack drive <prompt>"
+  [ -d "$VHOME" ] || die "no run at $RUN_DIR; run 'control-pstack launch' first"
+
+  n=0
+  while [ -e "$ART/drive-$n" ]; do n=$((n + 1)); done
+  out="$ART/drive-$n"
+  mkdir -p "$out"
+  printf '%s\n' "$1" > "$out/prompt.txt"
+
+  set +e
+  ( cd "$SCRATCH" && VIBE_HOME="$VHOME" vibe -p "$1" --trust --output-dir "$out/export" ) \
+    > "$out/stdout.txt" 2> "$out/stderr.txt"
+  code=$?
+  set -e
+
+  printf '%s\n' "$code" > "$out/exit_code.txt"
+  printf 'drive-%s exit=%s\n' "$n" "$code"
+  printf 'stdout: %s\n' "$out/stdout.txt"
+  printf 'stderr: %s\n' "$out/stderr.txt"
+  printf 'export: %s\n' "$out/export"
+}
+
+cmd_cleanup() {
+  if [ ! -d "$VHOME" ]; then
+    printf 'nothing to clean at %s\n' "$VHOME"
+    return 0
+  fi
+  # Vibe pins read-only plugin snapshots under logs/session/plugins/, so a plain
+  # rm -rf leaves the tree behind. Make it writable first.
+  chmod -R u+w "$VHOME" 2>/dev/null || true
+  rm -rf "$VHOME" "$SCRATCH"
+  if [ -d "$VHOME" ]; then
+    printf 'cleanup incomplete: %s still exists\n' "$VHOME" >&2
+    return 1
+  fi
+  printf 'removed %s and %s; artifacts kept at %s\n' "$VHOME" "$SCRATCH" "$ART"
+}
+
+cmd_status() {
+  printf 'run dir:   %s\n' "$RUN_DIR"
+  printf 'vibe home: %s\n' "$VHOME"
+  printf 'scratch:   %s\n' "$SCRATCH"
+  printf 'artifacts: %s\n' "$ART"
+  if [ -d "$VHOME" ]; then
+    printf 'state:     launched\n'
+  else
+    printf 'state:     not launched\n'
+  fi
+}
+
+command_name=${1:-status}
+[ $# -gt 0 ] && shift
+
+case "$command_name" in
+  launch) cmd_launch ;;
+  doctor) cmd_doctor ;;
+  drive) cmd_drive "$@" ;;
+  sheet) cmd_sheet "$@" ;;
+  cleanup) cmd_cleanup ;;
+  status) cmd_status ;;
+  -h | --help | help)
+    sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    die "unknown command: $command_name (launch|doctor|drive|sheet|cleanup|status)"
+    ;;
+esac
