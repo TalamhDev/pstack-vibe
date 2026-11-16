@@ -42,6 +42,7 @@ expect_output() {
 # pass path: the sheet names a profile that has a TOML
 cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
 # pstack model configuration
+# deepseek: deepseek-flash
 feature, refactoring: pstack-deepseek
 EOF
 mkdir -p "$VIBE_HOME/agents"
@@ -94,5 +95,89 @@ EOF
 run_doctor
 expect_status 1
 expect_output 'FAIL  model aliases missing from'
+
+# restore a passing install before the negative controls
+cat > "$VIBE_HOME/config.toml" <<'EOF'
+[[models]]
+name = "deepseek-v4-1-flash-1017"
+provider = "mistral"
+alias = "deepseek-flash"
+EOF
+run_doctor
+expect_status 0
+
+# a skill directory missing from the install fails
+mv "$VIBE_HOME/plugins/pstack/skills/arena" "$tmp/arena"
+run_doctor
+expect_status 1
+expect_output 'FAIL  skills: missing from the install: arena'
+mv "$tmp/arena" "$VIBE_HOME/plugins/pstack/skills/arena"
+
+# an unexpected skill directory fails
+mkdir -p "$VIBE_HOME/plugins/pstack/skills/zzz-unexpected"
+cp "$VIBE_HOME/plugins/pstack/skills/why/SKILL.md" \
+  "$VIBE_HOME/plugins/pstack/skills/zzz-unexpected/SKILL.md"
+run_doctor
+expect_status 1
+expect_output 'FAIL  skills: not in skills.manifest:'
+rm -rf "$VIBE_HOME/plugins/pstack/skills/zzz-unexpected"
+
+# a fourth family with no alias in config.toml fails, then passes once added
+cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
+# pstack model configuration
+# deepseek: deepseek-flash
+# qwen: qwen-3-max
+feature, refactoring: pstack-deepseek
+arena runners: pstack-deepseek, pstack-qwen
+EOF
+cat > "$VIBE_HOME/agents/pstack-qwen.toml" <<'EOF'
+schema_version = 1
+agent_type = "subagent"
+display_name = "pstack qwen"
+description = "pstack code delegate on qwen-3-max."
+active_model = "qwen-3-max"
+EOF
+run_doctor
+expect_status 1
+expect_output 'FAIL  model aliases missing from .*qwen:qwen-3-max'
+cat >> "$VIBE_HOME/config.toml" <<'EOF'
+
+[[models]]
+name = "qwen-3-max-2025"
+provider = "mistral"
+alias = "qwen-3-max"
+EOF
+run_doctor
+expect_status 0
+
+# role lines with no comment lines leave every family without an alias
+cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
+feature, refactoring: pstack-deepseek
+EOF
+run_doctor
+expect_status 1
+expect_output 'FAIL  model aliases: no alias recorded for family: deepseek'
+
+# a comment line naming a profile does not satisfy the profile check, and a
+# prose note is not read as a family line
+cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
+# pstack model configuration
+# deepseek: deepseek-flash
+# note: pstack-ghost is unused
+feature, refactoring: pstack-deepseek
+EOF
+run_doctor
+expect_status 0
+expect_output 'PASS  agent profiles named in the sheet are installed'
+
+# the same token on a role line does
+cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
+# pstack model configuration
+# deepseek: deepseek-flash
+feature, refactoring: pstack-deepseek, pstack-ghost
+EOF
+run_doctor
+expect_status 1
+expect_output 'FAIL  agent profiles missing for: pstack-ghost'
 
 echo "doctor: PASS"

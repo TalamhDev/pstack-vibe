@@ -57,7 +57,7 @@ One read-only check that answers "is this instance worth driving?". It prints se
 ```
 PASS  vibe is on PATH: vibe 3.1.2
 PASS  plugin manifest at <home>/plugins/pstack/plugin.json names pstack
-PASS  skills: 58 SKILL.md files
+PASS  skills: 58 SKILL.md files match skills.manifest
 PASS  hook file at <home>/plugins/pstack/ai.mistral.vibe/hooks.toml
 PASS  model sheet at <home>/pstack-models.md
 PASS  agent profiles named in the sheet are installed
@@ -150,9 +150,9 @@ place it, when you want two runs side by side — they do not share state.
 - **`npm install` first.** A fresh clone has no `node_modules`, so `npm run check` and
   `npm test` fail with `ERR_MODULE_NOT_FOUND`. `launch` handles it; a bare `npm test`
   does not.
-- **The doctor hardcodes 58 skills.** Adding or removing a skill fails check 3 until
-  `scripts/doctor.sh` and `tests/doctor.test.sh` are updated together. That is a real
-  gate, not a flake.
+- **The doctor compares skills against `skills.manifest`.** Adding or removing a skill
+  means regenerating the tree, not editing `scripts/doctor.sh`. A skill directory added
+  by hand to an install fails check 3 until the manifest matches.
 - **`--project` writes into the current directory.** `./scripts/install.sh install
   --project` creates `./.vibe/plugins/pstack` wherever you stand. Run it from a scratch
   directory, or you will dirty this repo.

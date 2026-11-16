@@ -75,6 +75,31 @@ test("generatePlugin copies skills, applies rules, and adds the header", async (
   );
 });
 
+test("generatePlugin writes skills.manifest from the skill directories", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "pstack-manifest-"));
+  const vendor = join(dir, "vendor");
+  const adapters = join(dir, "adapters");
+  const out = join(dir, "out");
+  for (const name of ["beta", "alpha"]) {
+    mkdirSync(join(vendor, "skills", name), { recursive: true });
+    writeFileSync(join(vendor, "skills", name, "SKILL.md"), `---\nname: ${name}\n---\n\nBody.\n`);
+  }
+  mkdirSync(join(vendor, "skills", "not-a-skill"), { recursive: true });
+  writeFileSync(join(vendor, "plugin.json"), JSON.stringify({ name: "pstack", version: "0.15.42" }));
+  writeFileSync(join(vendor, "LICENSE"), "MIT License\n");
+  mkdirSync(adapters, { recursive: true });
+  writeFileSync(join(adapters, "substitutions.json"), JSON.stringify({
+    version: 1,
+    upstream: { commit: "bf0c7cd", version: "0.15.42" },
+    rules: [],
+    forks: [],
+  }));
+
+  await generatePlugin({ vendorDir: vendor, adaptersDir: adapters, outDir: out });
+
+  assert.equal(readFileSync(join(out, "skills.manifest"), "utf8"), "alpha\nbeta\n");
+});
+
 test("generatePlugin --check reports a stale tree", async () => {
   const dir = mkdtempSync(join(tmpdir(), "pstack-check-"));
   const vendor = join(dir, "vendor");

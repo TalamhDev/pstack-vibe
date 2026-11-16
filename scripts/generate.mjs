@@ -142,6 +142,21 @@ function addMarkdownFile(entries, vendorDir, name) {
   });
 }
 
+function addSkillManifest(entries, vendorDir) {
+  const skillsDir = join(vendorDir, "skills");
+  if (!existsSync(skillsDir)) return;
+  const names = readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(skillsDir, entry.name, "SKILL.md")))
+    .map((entry) => entry.name)
+    .sort();
+  entries.set("skills.manifest", {
+    content: `${names.join("\n")}\n`,
+    mode: 0o644,
+    transform: false,
+    sourcePath: "skills",
+  });
+}
+
 function addReadme(entries, vendorDir, adaptersDir, substitutions) {
   const adapterReadme = join(adaptersDir, "vibe", "README.md");
   if (existsSync(adapterReadme)) {
@@ -418,6 +433,7 @@ function addSessionStart(entries, adaptersDir) {
 function buildEntries(vendorDir, adaptersDir, substitutions) {
   const entries = new Map();
   addTree(entries, vendorDir, "skills", "skills", { markdown: true });
+  addSkillManifest(entries, vendorDir);
   addTree(entries, vendorDir, "assets", "assets", { markdown: false });
   addReadme(entries, vendorDir, adaptersDir, substitutions);
   addPluginManifest(entries, vendorDir, adaptersDir, substitutions);

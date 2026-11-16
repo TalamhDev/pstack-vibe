@@ -55,7 +55,7 @@ Preconditions:
   with `ERR_MODULE_NOT_FOUND`, which looks like a code failure and is not.
 - `npm run generate` rewrites the whole tree. Review `git status` before committing; a
   stale vendor pin shows up as a large diff, not an error.
-- The doctor's skills count and the generated tree are coupled. Adding a skill changes
-  both the tree and the `58` in `scripts/doctor.sh`.
+- The doctor's skills check and the generated tree are coupled. Adding or removing a skill
+  regenerates `skills.manifest` with the tree, and the doctor compares against it.
 - `scripts/sync.mjs` refuses on a dirty tree. Commit or stash before refreshing the
   vendor pin.
