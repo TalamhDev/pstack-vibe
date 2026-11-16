@@ -17,6 +17,11 @@ if [ -n "$payload" ]; then
   cwd="$(printf '%s\n' "$payload" | sed -n 's/.*"cwd"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
 fi
 
+session=""
+if [ -n "$payload" ]; then
+  session="$(printf '%s\n' "$payload" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+fi
+
 sheet=""
 if [ -n "$cwd" ] && [ -f "$cwd/.vibe/pstack-models.md" ]; then
   sheet="$cwd/.vibe/pstack-models.md"
@@ -28,9 +33,23 @@ fi
 
 root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
 
+# The recorder writes only into a run directory that carries this marker, so a
+# session that never opened one records nothing.
+run_dir=""
+if [ -n "$session" ]; then
+  data="${PLUGIN_DATA:-${HOME:-.}/.vibe/plugin-data/pstack}"
+  run_dir="$data/runs/$session"
+  if ! mkdir -p "$run_dir" 2>/dev/null || ! : > "$run_dir/ready" 2>/dev/null; then
+    run_dir=""
+  fi
+fi
+
 {
   printf '%s\n\n' "pstack is installed. For rigorous work, invoke /pstack:poteto-mode (or /poteto-mode)."
   printf 'Plugin root: %s\n' "$root"
+  if [ -n "$run_dir" ]; then
+    printf 'Run directory: %s\n' "$run_dir"
+  fi
   printf 'Adapter: %s\n' "$root/ai.mistral.vibe/knowledge/pstack-vibe/KNOWLEDGE.md"
   printf 'Role table: %s\n' "$root/ai.mistral.vibe/knowledge/pstack-models/KNOWLEDGE.md"
   if [ -n "$sheet" ]; then

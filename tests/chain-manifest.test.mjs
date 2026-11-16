@@ -15,7 +15,7 @@ const manifestPath = join(root, "adapters/vibe/chain.tsv");
 const playbooksDir = join(root, "vendor/pstack/skills/poteto-mode/playbooks");
 
 const COLUMNS = ["playbook", "step", "scope", "when", "field", "kind", "match", "reason"];
-const SCOPE = new Set(["ship", "guard", "both"]);
+const SCOPE = new Set(["ship", "guard"]);
 const WHEN = new Set(["always", "contested", "no-babysit", "subagents", "optional"]);
 const FIELD = new Set(["evidence", "title", "body", "command"]);
 const KIND = new Set(["require", "forbid"]);
@@ -75,6 +75,28 @@ test("scope, when, field, and kind are each in their closed set", () => {
     assert.ok(FIELD.has(row.field), `${row.playbook}/${row.step} has field=${row.field}`);
     assert.ok(KIND.has(row.kind), `${row.playbook}/${row.step} has kind=${row.kind}`);
   }
+});
+
+test("scope is ship or guard, with no third value", () => {
+  const { rows } = readManifest();
+  assert.deepEqual([...SCOPE].sort(), ["guard", "ship"]);
+  for (const row of rows) {
+    assert.ok(
+      row.scope === "ship" || row.scope === "guard",
+      `${row.playbook}/${row.step} has scope=${row.scope}`,
+    );
+  }
+  assert.doesNotMatch(readFileSync(manifestPath, "utf8"), /\tboth\t/);
+});
+
+test("an evidence row is ship, so a guard call is not judged on it", () => {
+  const { rows } = readManifest();
+  for (const row of rows) {
+    if (row.field !== "evidence") continue;
+    assert.equal(row.scope, "ship", `${row.playbook}/${row.step} is an evidence row that is not ship`);
+  }
+  const guard = rows.filter((row) => row.scope === "guard").map((row) => `${row.playbook}/${row.step}`);
+  assert.deepEqual(guard.sort(), ["opening-a-pr/no-ci-watch", "session/install-update"]);
 });
 
 test("every match compiles as a regular expression", () => {

@@ -9,7 +9,7 @@
     "generate": "node scripts/generate.mjs",
     "check": "node scripts/generate.mjs --check",
     "test": "node --test tests/*.test.mjs",
-    "test:shell": "sh tests/install.test.sh && sh tests/doctor.test.sh && sh tests/session-start.test.sh && sh tests/chain-record.test.sh"
+    "test:shell": "sh tests/install.test.sh && sh tests/doctor.test.sh && sh tests/session-start.test.sh && sh tests/chain-record.test.sh && sh tests/chain-gate.test.sh"
   },
   "devDependencies": {
     "smol-toml": "^1.9.1"

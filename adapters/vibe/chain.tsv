@@ -7,16 +7,20 @@
 #
 # The first non-comment line is the header. The audit resolves columns from it,
 # so a new column does not touch the script.
+#
+# `scope` is `ship` or `guard`, and nothing else. A `ship` row is checked on the
+# call that opens the PR; a `guard` row is checked on the command it is about to
+# run, so a CI watch is never judged on the PR body it does not have.
 playbook	step	scope	when	field	kind	match	reason
-feature	architect	both	always	evidence	require	read_file.*path=.*architect/SKILL\.md	architect for parallel design exploration
-feature	arena	both	contested	evidence	require	read_file.*path=.*arena/SKILL\.md	arena on the implementation shape
-feature	interrogate	both	contested	evidence	require	read_file.*path=.*interrogate/SKILL\.md	interrogate before shipping a contested design
-opening-a-pr	worktree	both	subagents	evidence	require	cmd=(.*[;&|] )?git worktree add	worktree per subagent
-opening-a-pr	commits	both	always	evidence	require	cmd=(.*[;&|] )?git commit	commit liberally, rebase into ordered commits
-opening-a-pr	commit-scope	both	always	evidence	require	cmd=(.*[;&|] )?git commit.*[a-z]+(\([a-z0-9-]+\))?: 	Conventional Commits subject
-opening-a-pr	no-comments	both	always	evidence	require	read_file.*path=.*no-comments/SKILL\.md	/no-comments before review
-opening-a-pr	technical-writing	both	always	evidence	require	read_file.*path=.*technical-writing/SKILL\.md	/technical-writing on the title, body, and commit bodies
-opening-a-pr	unslop	both	always	evidence	require	read_file.*path=.*unslop/SKILL\.md	/unslop on the PR body
+feature	architect	ship	always	evidence	require	read_file.*path=.*architect/SKILL\.md	architect for parallel design exploration
+feature	arena	ship	contested	evidence	require	read_file.*path=.*arena/SKILL\.md	arena on the implementation shape
+feature	interrogate	ship	contested	evidence	require	read_file.*path=.*interrogate/SKILL\.md	interrogate before shipping a contested design
+opening-a-pr	worktree	ship	subagents	evidence	require	cmd=(.*[;&|] )?git worktree add	worktree per subagent
+opening-a-pr	commits	ship	always	evidence	require	cmd=(.*[;&|] )?git commit	commit liberally, rebase into ordered commits
+opening-a-pr	commit-scope	ship	always	evidence	require	cmd=(.*[;&|] )?git commit.*[a-z]+(\([a-z0-9-]+\))?: 	Conventional Commits subject
+opening-a-pr	no-comments	ship	always	evidence	require	read_file.*path=.*no-comments/SKILL\.md	/no-comments before review
+opening-a-pr	technical-writing	ship	always	evidence	require	read_file.*path=.*technical-writing/SKILL\.md	/technical-writing on the title, body, and commit bodies
+opening-a-pr	unslop	ship	always	evidence	require	read_file.*path=.*unslop/SKILL\.md	/unslop on the PR body
 opening-a-pr	body-file	ship	always	command	require	--body-file	write the body to a file and pass --body-file
 opening-a-pr	title	ship	always	title	require	^[a-z]+(\([a-z0-9-]+\))?: .*[^.]$	Conventional Commits title, no trailing period
 opening-a-pr	body-why	ship	always	body	require	^## Why$	the body has no `## Why` heading
@@ -27,7 +31,7 @@ opening-a-pr	body-verification	ship	always	body	require	^## Verification$	the bo
 opening-a-pr	body-tradeoffs	ship	optional	body	require	^## Tradeoffs$	the body has no `## Tradeoffs` heading
 opening-a-pr	not-draft	ship	always	command	forbid	--draft	open the PR ready, never as a draft
 opening-a-pr	no-ci-watch	guard	no-babysit	command	forbid	(gh|origin) (pr checks|run watch)	post the URL, do not watch CI
-session	install-update	guard	always	command	forbid	(^|[;&|] )\.?/?scripts/install\.sh update	install.sh update needs the user's answer first
+session	install-update	guard	always	command	forbid	(^|[;&|] )(sh )?\.?/?scripts/install\.sh update	install.sh update needs the user's answer first
 # unchecked	first-message-goal	the restatement is assistant text, not a tool call
 # unchecked	fix-round-fresh	needs ordering; the evidence set records no order
 # unchecked	throughput-checkpoint	the checkpoint is reply text, not a tool call
