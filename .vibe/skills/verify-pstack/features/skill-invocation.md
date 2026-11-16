@@ -28,7 +28,7 @@ Preconditions:
 
 - A launched run: `control-pstack launch` has created `$RUN_DIR/home` and installed
   the plugin into it.
-- `control-pstack doctor` reports seven `PASS` lines.
+- `control-pstack doctor` reports only `PASS` lines.
 
 - **Run a skill from its full command.** Run `control-pstack drive
   "/pstack:poteto-help"`. Stdout contains the orientation menu — the numbered list

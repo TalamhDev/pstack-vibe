@@ -12,7 +12,7 @@ as the recipe.
 - Require `~/.vibe/config.toml` and `~/.vibe/pstack-models.md` to exist. They are the
   environment the plugin is verified against; run `/pstack:setup-pstack` if either is
   missing.
-- Run `control-pstack doctor` and require all seven `PASS` lines before driving.
+- Run `control-pstack doctor` and require every `PASS` line before driving.
 - Never drive a home this run did not create. Never point `VIBE_HOME` at `~/.vibe`.
 
 ## Driving conventions
