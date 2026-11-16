@@ -1,6 +1,4 @@
 #!/bin/sh
-# The poteto-mode chain audit: arm on the prompt, record tool-call evidence,
-# then gate the call that means "done" on it.
 set -eu
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
@@ -83,7 +81,6 @@ root_session() {
   field "$1" session_id
 }
 
-# classify <command> -> ship | guard | none
 # Every arm is anchored at a command boundary, so a command that merely mentions
 # one of these strings (`git log --grep='gh pr create'`) is not gated.
 classify() {
@@ -103,9 +100,9 @@ classify() {
   fi
 }
 
-# The only arming path. A slash-invoked skill produces no hook events and every
-# pstack skill is disable-model-invocation, so the prompt is the one signal that
-# a poteto-mode run started.
+# The only arming path. A slash-invoked skill produces no hook events, and the
+# skills the chain names are disable-model-invocation, so the prompt is the one
+# signal that a poteto-mode run started.
 arm() {
   payload=""
   if [ ! -t 0 ]; then
@@ -217,12 +214,11 @@ record() {
     }')
   [ -n "$line" ] || return 0
 
-  # One printf to an O_APPEND descriptor. A structured line is under 1100 bytes,
-  # so concurrent calls cannot interleave.
+  # `flat` caps each field at 1024 bytes, so a spawn's multi-kilobyte message
+  # never reaches the file.
   printf '%s\n' "$line" >> "$dir/evidence.tsv"
 }
 
-# audit_run <evidence> <claim> <command> <cwd>
 # Prints one `<playbook>/<step>: <reason>` line per failure. Exit 0 allows, 1
 # denies, anything else is an internal error the caller must not read as a deny.
 audit_run() {

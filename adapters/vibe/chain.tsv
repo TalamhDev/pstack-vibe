@@ -1,9 +1,9 @@
 # adapters/vibe/chain.tsv
 #
-# The poteto-mode chain, as data. One row per required step. Only chain.sh reads
-# this file. A step with no checkable signature is listed under `# unchecked`
-# below rather than given a row that always passes, so this file stays the
-# complete list of what the playbooks require and what is enforced.
+# The poteto-mode chain, as data. One row per required step. A step with no
+# checkable signature is listed under `# unchecked` below rather than given a row
+# that always passes, so this file stays the complete list of what the playbooks
+# require and what is enforced.
 #
 # The first non-comment line is the header. The audit resolves columns from it,
 # so a new column does not touch the script.
