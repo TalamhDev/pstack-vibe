@@ -2,6 +2,7 @@
 set -eu
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck disable=SC1091 # json.sh is checked on its own in the same glob
 . "$script_dir/json.sh"
 
 # Vibe runs plugin hooks from the plugin's pinned copy, so the session folder

@@ -1,6 +1,7 @@
 #!/bin/sh
 # The JSON string escaper both hooks share. Source this file, then use
 # $JSON_ESCAPE_AWK as the prefix of an awk program that prints escaped lines.
+# shellcheck disable=SC2034
 JSON_ESCAPE_AWK='
 BEGIN {
   ctrl = ""
