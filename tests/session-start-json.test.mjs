@@ -35,6 +35,8 @@ const ROOT = resolve(HERE, "..");
 const GENERATED = join(ROOT, "generated/vibe");
 const HOOK = join(GENERATED, "ai.mistral.vibe/scripts/session-start.sh");
 const SOURCE = join(ROOT, "adapters/vibe/scripts/session-start.sh");
+const ESCAPER = join(GENERATED, "ai.mistral.vibe/scripts/json.sh");
+const ESCAPER_SOURCE = join(ROOT, "adapters/vibe/scripts/json.sh");
 
 // Every character the escaper treats specially, plus a plain ASCII character,
 // a two-byte character, and a four-byte character.
@@ -74,6 +76,14 @@ test("generated hook is byte-identical to its source", () => {
     readFileSync(HOOK, "utf8"),
     readFileSync(SOURCE, "utf8"),
     "generated hook differs from adapters/vibe/scripts/session-start.sh; run `npm run generate`",
+  );
+});
+
+test("generated escaper is byte-identical to its source", () => {
+  assert.equal(
+    readFileSync(ESCAPER, "utf8"),
+    readFileSync(ESCAPER_SOURCE, "utf8"),
+    "generated escaper differs from adapters/vibe/scripts/json.sh; run `npm run generate`",
   );
 });
 

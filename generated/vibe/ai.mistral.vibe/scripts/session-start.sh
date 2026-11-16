@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+. "$script_dir/json.sh"
+
 # Vibe runs plugin hooks from the plugin's pinned copy, so the session folder
 # arrives in the payload's `cwd`. Read it when stdin is a pipe, then fall back
 # to the current directory and the user-level sheet for a direct invocation.
@@ -36,33 +39,8 @@ root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
   else
     printf '%s\n' "No model sheet found. Run /pstack:setup-pstack to configure model roles."
   fi
-} | awk '
-function escape(s,   out, i, c, code) {
-  out = ""
-  for (i = 1; i <= length(s); i++) {
-    c = substr(s, i, 1)
-    if (c == "\\") out = out "\\\\"
-    else if (c == q) out = out "\\\""
-    else if (c == "\t") out = out "\\t"
-    else if (c == "\r") out = out "\\r"
-    else if (c == bs) out = out "\\b"
-    else if (c == ff) out = out "\\f"
-    else {
-      code = index(ctrl, c)
-      if (code > 0) out = out sprintf("\\u%04x", code)
-      else out = out c
-    }
-  }
-  return out
-}
-BEGIN {
-  ctrl = ""
-  for (i = 1; i < 32; i++) ctrl = ctrl sprintf("%c", i)
-  bs = sprintf("%c", 8)
-  ff = sprintf("%c", 12)
-  q = sprintf("%c", 34)
-  printf "{\"hook_specific_output\":{\"additional_context\":\""
-}
+} | awk "$JSON_ESCAPE_AWK"'
+BEGIN { printf "{\"hook_specific_output\":{\"additional_context\":\"" }
 {
   printf "%s\\n", escape($0)
 }

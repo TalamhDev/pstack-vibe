@@ -1,7 +1,15 @@
 // tests/generate.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -169,6 +177,28 @@ test("poteto-help links point at the repo and README documents the optional runt
   assert.match(readme, /requires bun/);
   assert.match(readme, /npm install/);
   assert.ok(existsSync(join(out, "skills/poteto-mode/scripts/watch-pr/watch-pr")));
+});
+
+test("the chain manifest and every vibe script are generated with their modes", async () => {
+  const out = await generateRealPlugin();
+
+  const manifest = join(out, "ai.mistral.vibe/chain.tsv");
+  assert.ok(existsSync(manifest), "chain.tsv is not generated");
+  assert.equal(statSync(manifest).mode & 0o777, 0o644);
+  assert.equal(
+    readFileSync(manifest, "utf8"),
+    readFileSync(join(root, "adapters/vibe/chain.tsv"), "utf8"),
+  );
+
+  const sourceDir = join(root, "adapters/vibe/scripts");
+  const names = readdirSync(sourceDir).filter((name) => name.endsWith(".sh"));
+  assert.ok(names.length >= 3, `expected the vibe scripts, found ${names.join(", ")}`);
+  for (const name of names) {
+    const target = join(out, "ai.mistral.vibe/scripts", name);
+    assert.ok(existsSync(target), `${name} is not generated`);
+    assert.equal(statSync(target).mode & 0o777, 0o755, `${name} is not 0755`);
+    assert.equal(readFileSync(target, "utf8"), readFileSync(join(sourceDir, name), "utf8"));
+  }
 });
 
 test("generation removes stale files and leaves unrelated files alone", async () => {
