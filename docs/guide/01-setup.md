@@ -25,8 +25,8 @@ Check the install at any time:
 ./scripts/install.sh doctor
 ```
 
-It checks Vibe, the manifest, all 58 skills, the hook, the model sheet, the profiles, and the
-model aliases.
+It checks Vibe, the manifest, the skills against `skills.manifest`, the hook, the model sheet,
+the profiles, and the model aliases.
 
 ## Pick your models
 

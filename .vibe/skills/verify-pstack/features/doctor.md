@@ -9,11 +9,12 @@ model alias seems to be missing.
 
 - `doctor-vibe` checks that `vibe` is on `PATH` and reports a version.
 - `doctor-manifest` checks that `plugin.json` exists and names `pstack`.
-- `doctor-skills` checks that the plugin ships exactly 58 `SKILL.md` files.
+- `doctor-skills` compares the installed skills tree against `skills.manifest`.
 - `doctor-hook` checks that `ai.mistral.vibe/hooks.toml` exists.
 - `doctor-sheet` checks that the model sheet exists.
-- `doctor-profiles` checks that every `pstack-*` profile named in the sheet is installed.
-- `doctor-aliases` checks that every alias recorded in the sheet exists in `config.toml`.
+- `doctor-profiles` checks that every `pstack-*` profile named on a role line is installed.
+- `doctor-aliases` checks that every family the sheet names has an alias, and that the alias
+  exists in `config.toml`.
 
 ## How to get to it (user POV)
 
@@ -28,7 +29,7 @@ Preconditions:
   the plugin into it.
 
 - **Healthy install.** Run `control-pstack doctor`. Seven `PASS` lines, no `FAIL`, exit
-  code `0`. The skills line reads `PASS  skills: 58 SKILL.md files`.
+  code `0`. The skills line reads `PASS  skills: 58 SKILL.md files match skills.manifest`.
 - **Missing sheet.** Remove `$RUN_DIR/home/pstack-models.md`, then run
   `control-pstack doctor`. Exit code is `1`. The sheet line reads `FAIL  model sheet at
   ... is missing; run /setup-pstack`, and both the profiles and aliases lines read
@@ -42,20 +43,37 @@ Preconditions:
   `FAIL  model aliases missing from ...: glm:glm-5-3`.
 - **Missing plugin.** Remove `$RUN_DIR/home/plugins/pstack`, then run
   `control-pstack doctor`. Exit code is `1` and the manifest, skills, and hook lines
-  all `FAIL`.
+  all `FAIL`. The skills line reads `FAIL  skills: skills.manifest is missing from
+  ...; reinstall the plugin`.
+- **Missing skills directory.** Restore the plugin, then remove
+  `$RUN_DIR/home/plugins/pstack/skills`, then run `control-pstack doctor`. Exit code is
+  `1` and the skills line reads `FAIL  skills: no skills directory at
+  .../plugins/pstack/skills`.
+- **Removed skill.** Restore the skills directory, then remove
+  `$RUN_DIR/home/plugins/pstack/skills/arena`, then run `control-pstack doctor`. Exit
+  code is `1` and the skills line reads `FAIL  skills: missing from the install: arena`.
+- **Unexpected skill.** Restore the skill, then add
+  `$RUN_DIR/home/plugins/pstack/skills/extra/SKILL.md`, then run
+  `control-pstack doctor`. Exit code is `1` and the skills line reads
+  `FAIL  skills: not in skills.manifest: extra`.
+- **Fourth family.** Remove the extra skill, then add a `# qwen: qwen-3` line and a role
+  naming `pstack-qwen` to `$RUN_DIR/home/pstack-models.md`, and add
+  `$RUN_DIR/home/agents/pstack-qwen.toml`. Leave `qwen-3` out of
+  `$RUN_DIR/home/config.toml`, then run `control-pstack doctor`. Exit code is `1` and
+  the aliases line reads `FAIL  model aliases missing from ...: qwen:qwen-3`.
+- **No family lines.** Keep the `pstack-qwen` role, delete every `# <family>: <alias>`
+  line from the sheet, then run `control-pstack doctor`. Exit code is `1` and the
+  aliases line reads `FAIL  model aliases: no alias recorded for family: deepseek glm
+  ml4 qwen`, naming every family the roles name. Deleting only the `# qwen: qwen-3`
+  line reads `FAIL  model aliases: no alias recorded for family: qwen`. A sheet with no
+  family lines and no role naming a profile reads `PASS  model aliases: the sheet
+  records no aliases`.
 - **Proof.** Keep the full stdout and exit code of each run under
   `$RUN_DIR/artifacts/doctor/`. A single `PASS` line is not proof; the seven-line block
   and the exit code are.
 
 ## Gotchas
 
-- The skills check hardcodes `58`. Adding or removing a skill fails it until
-  `scripts/doctor.sh` and `tests/doctor.test.sh` are updated together.
-- The alias check only looks at the `deepseek`, `glm`, and `ml4` families. A sheet
-  recording a fourth family is not checked, so a missing alias there passes silently.
-- The alias check reads the `# <family>: <alias>` comment lines, not the role lines. A
-  sheet with roles but no comment lines reports `PASS  model aliases: none recorded in
-  the sheet`, which is a pass over nothing.
 - Doctor never starts a session. It cannot tell you whether the hook fires or whether a
   skill loads; that is what the session-context and skill-invocation features are for.
 - Doctor reads `$VIBE_HOME`, so it does check the run home. The session-start hook does

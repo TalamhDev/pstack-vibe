@@ -156,9 +156,9 @@ pause list.
 ## Troubleshooting
 
 **The plugin is not found.** Check that `~/.vibe/plugins/pstack/plugin.json` exists and names
-`pstack`. Run `./scripts/install.sh doctor`; it checks the manifest, all 58 skills, the hook,
-the model sheet, the profiles, and the aliases. A project install lives at
-`.vibe/plugins/pstack`, so run the installer from that repository with `--project`.
+`pstack`. Run `./scripts/install.sh doctor`; it checks the manifest, the skills against
+`skills.manifest`, the hook, the model sheet, the profiles, and the aliases. A project install
+lives at `.vibe/plugins/pstack`, so run the installer from that repository with `--project`.
 
 **Skills do not show up.** Run `/reload-plugins` or start a new session. Most pstack skills
 set `disable-model-invocation: true`, so the `skill` tool does not load them on its own. Type

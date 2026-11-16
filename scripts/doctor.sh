@@ -41,15 +41,42 @@ else
   fail "plugin manifest at $plugin_dir/plugin.json is missing or does not name pstack"
 fi
 
-# 3. The plugin ships every skill.
-skills=0
-if [ -d "$plugin_dir/skills" ]; then
-  skills=$(find "$plugin_dir/skills" -type f -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
-fi
-if [ "$skills" -eq 58 ]; then
-  pass "skills: $skills SKILL.md files"
+# 3. The installed skills match the generated manifest.
+skills_dir="$plugin_dir/skills"
+manifest="$plugin_dir/skills.manifest"
+
+# Names in $1 (newline separated) that are absent from the newline separated
+# list $2, space separated with a leading space.
+absent_names() {
+  printf '%s\n' "$1" | have="$2" awk '
+    BEGIN {
+      count = split(ENVIRON["have"], lines, "\n")
+      for (i = 1; i <= count; i += 1) seen[lines[i]] = 1
+    }
+    NF && !($0 in seen) { out = out " " $0 }
+    END { print out }
+  '
+}
+
+if [ ! -f "$manifest" ]; then
+  fail "skills: skills.manifest is missing from $plugin_dir; reinstall the plugin"
+elif [ ! -d "$skills_dir" ]; then
+  fail "skills: no skills directory at $skills_dir"
 else
-  fail "skills: expected 58 SKILL.md files, found $skills"
+  installed=$(find "$skills_dir" -mindepth 2 -maxdepth 2 -type f -name SKILL.md 2>/dev/null |
+    sed -e 's|/SKILL\.md$||' -e 's|.*/||' | sort)
+  manifest_names=$(cat "$manifest")
+  skills_missing=$(absent_names "$manifest_names" "$installed")
+  skills_extra=$(absent_names "$installed" "$manifest_names")
+
+  if [ -n "$skills_missing" ]; then
+    fail "skills: missing from the install:$skills_missing"
+  elif [ -n "$skills_extra" ]; then
+    fail "skills: not in skills.manifest:$skills_extra"
+  else
+    skills=$(printf '%s\n' "$installed" | awk 'NF' | wc -l | tr -d ' ')
+    pass "skills: $skills SKILL.md files match skills.manifest"
+  fi
 fi
 
 # 4. The session-start hook is present.
@@ -66,18 +93,81 @@ else
   fail "model sheet at $sheet is missing; run /setup-pstack"
 fi
 
-# 6. Every pstack-* profile named in the sheet is installed.
+# A family line is "# <family>: <alias>" with the alias as the whole value, so a
+# prose note that happens to start with a key is not read as a family. The
+# metadata keys are closed by the sheet format; the family set is not. A role
+# line is any non-blank line that is not a comment, and its pstack-* tokens are
+# profile names.
+tab=$(printf '\t')
+sheet_records=""
+if [ -f "$sheet" ]; then
+  sheet_records=$(awk '
+    {
+      line = $0
+      if (line ~ /^[[:space:]]*#/) {
+        sub(/^[[:space:]]*#[[:space:]]*/, "", line)
+        if (line !~ /^[a-z][a-z0-9-]*:[[:space:]]*[^[:space:]]+[[:space:]]*$/) next
+        key = line
+        sub(/:.*/, "", key)
+        if (key == "defaults" || key == "budget" || key == "parent") next
+        value = line
+        sub(/^[^:]*:[[:space:]]*/, "", value)
+        sub(/[[:space:]].*/, "", value)
+        print "family\t" key "\t" value
+        next
+      }
+      if (line ~ /^[[:space:]]*$/) next
+      while (match(line, /pstack-[a-z0-9][a-z0-9-]*/)) {
+        print "role\t" substr(line, RSTART, RLENGTH)
+        line = substr(line, RSTART + RLENGTH)
+      }
+    }
+  ' "$sheet")
+fi
+
+profiles=""
+families=""
+aliases=""
+while IFS="$tab" read -r kind first second; do
+  case $kind in
+    role) profiles="$profiles $first" ;;
+    family)
+      families="$families $first"
+      aliases="$aliases $first:$second"
+      ;;
+  esac
+done <<EOF
+$sheet_records
+EOF
+
+profiles=$(printf '%s\n' "$profiles" | tr ' ' '\n' | awk 'NF' | sort -u)
+for profile in $profiles; do
+  family=${profile#pstack-}
+  # setup-pstack step 8 writes pstack-<family>-<level> profiles, and the family
+  # line still records the base alias.
+  case $family in
+    *-max|*-high|*-medium|*-low) family=${family%-*} ;;
+  esac
+  families="$families $family"
+done
+families=$(printf '%s\n' "$families" | tr ' ' '\n' | awk 'NF' | sort -u)
+
+alias_for() {
+  for pair in $aliases; do
+    case $pair in
+      "$1":*)
+        printf '%s\n' "${pair#*:}"
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+# 6. Every pstack-* profile named on a role line is installed.
 if [ ! -f "$sheet" ]; then
   fail "agent profiles: cannot check without a model sheet"
 else
-  profiles=$(awk '{
-    line = $0
-    while (match(line, /pstack-[a-z0-9][a-z0-9-]*/)) {
-      print substr(line, RSTART, RLENGTH)
-      line = substr(line, RSTART + RLENGTH)
-    }
-  }' "$sheet" | sort -u)
-
   missing=""
   for profile in $profiles; do
     if [ -f "$agents/$profile.toml" ] ||
@@ -94,22 +184,17 @@ else
   fi
 fi
 
-# 7. Every alias recorded in the sheet exists in config.toml.
+# 7. Every family the sheet names has an alias, and that alias exists in config.toml.
 if [ ! -f "$sheet" ]; then
   fail "model aliases: cannot check without a model sheet"
 else
+  no_alias=""
   alias_missing=""
-  alias_checked=0
-  for family in deepseek glm ml4; do
-    model_alias=$(awk -v family="$family" '
-      $1 == "#" {
-        key = $2
-        sub(/:$/, "", key)
-        if (key == family) print $3
-      }
-    ' "$sheet" | head -n 1)
-    [ -n "$model_alias" ] || continue
-    alias_checked=$((alias_checked + 1))
+  for family in $families; do
+    if ! model_alias=$(alias_for "$family"); then
+      no_alias="$no_alias $family"
+      continue
+    fi
     if [ ! -f "$config" ] || ! awk -v want="$model_alias" '
       {
         line = $0
@@ -126,10 +211,12 @@ else
     fi
   done
 
-  if [ -n "$alias_missing" ]; then
+  if [ -n "$no_alias" ]; then
+    fail "model aliases: no alias recorded for family:$no_alias"
+  elif [ -n "$alias_missing" ]; then
     fail "model aliases missing from $config:$alias_missing"
-  elif [ "$alias_checked" -eq 0 ]; then
-    pass "model aliases: none recorded in the sheet"
+  elif [ -z "$families" ]; then
+    pass "model aliases: the sheet records no aliases"
   else
     pass "model aliases recorded in the sheet exist in $config"
   fi
