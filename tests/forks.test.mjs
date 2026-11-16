@@ -69,3 +69,28 @@ test("reflect reads the model sheet from both scopes", () => {
   assert.match(text, /~\/\.vibe\/pstack-models\.md/);
   assert.match(text, /or `\.vibe\/pstack-models\.md` for a project install/);
 });
+
+test("feature.md is a fork carrying the chain gate contract", () => {
+  const fork = forks.forks.find((entry) => entry.path === "skills/poteto-mode/playbooks/feature.md");
+  assert.ok(fork, "feature.md is not a fork");
+  assert.equal(fork.reason, "the chain audit's gate contract");
+
+  const text = readFileSync(join(root, "generated/vibe/skills/poteto-mode/playbooks/feature.md"), "utf8");
+  assert.match(text, /The chain audit blocks `gh pr create` until every `feature` and `opening-a-pr` row/);
+  assert.doesNotMatch(text, /waive/);
+});
+
+test("the playbooks name the chain gate where the run reads it", () => {
+  const skill = readFileSync(join(root, "generated/vibe/skills/poteto-mode/SKILL.md"), "utf8");
+  assert.match(skill, /The list is the plan; the chain audit is the proof\./);
+  assert.match(skill, /Read each skill's `SKILL\.md` by path, because the `skill` tool cannot load them\./);
+  assert.match(skill, /A step you choose not to do is a conversation with the user, not a line in the reply\./);
+  assert.doesNotMatch(skill, /stays in the list with a one-line `skip: <reason>`/);
+  assert.doesNotMatch(skill, /waive/);
+
+  const pr = readFileSync(join(root, "generated/vibe/skills/poteto-mode/playbooks/opening-a-pr.md"), "utf8");
+  assert.match(pr, /pass `--body-file \.vibe\/pr-body\.md`/);
+
+  const architect = readFileSync(join(root, "generated/vibe/skills/architect/SKILL.md"), "utf8");
+  assert.match(architect, /Name each runner `architect-<n>`/);
+});

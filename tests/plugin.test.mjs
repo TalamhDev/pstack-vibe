@@ -1,7 +1,7 @@
 // tests/plugin.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "smol-toml";
@@ -18,11 +18,29 @@ test("plugin.json has the required fields", () => {
   assert.equal(manifest.extensions["ai.mistral.vibe"].schemaVersion, 1);
 });
 
-test("hooks.toml has the session_start hook", () => {
+test("hooks.toml wires the context, arm, record, and gate hooks", () => {
   const hooks = parse(readFileSync(join(plugin, "ai.mistral.vibe/hooks.toml"), "utf8"));
-  assert.equal(hooks.hooks.length, 1);
-  assert.equal(hooks.hooks[0].type, "session_start");
-  assert.match(hooks.hooks[0].command, /session-start\.sh/);
+  assert.equal(hooks.hooks.length, 4);
+  assert.deepEqual(
+    hooks.hooks.map((hook) => hook.type),
+    ["session_start", "pre_agent", "post_tool", "pre_tool"],
+  );
+
+  const gate = hooks.hooks.find((hook) => hook.type === "pre_tool");
+  assert.equal(gate.match, "re:bash|process_start");
+  assert.equal(gate.strict, undefined, "a strict gate would deny every shell command on a script error");
+
+  const arm = hooks.hooks.find((hook) => hook.type === "pre_agent");
+  assert.equal(arm.match, undefined, "the arming hook must see every turn");
+
+  const recorder = hooks.hooks.find((hook) => hook.type === "post_tool");
+  assert.equal(recorder.strict, undefined);
+
+  for (const hook of hooks.hooks) {
+    const named = hook.command.match(/\$PLUGIN_ROOT\/(\S+?)"/);
+    assert.ok(named, `hook command names no plugin script: ${hook.command}`);
+    assert.ok(existsSync(join(plugin, named[1])), `missing script: ${named[1]}`);
+  }
 });
 
 test("agent TOMLs are subagent profiles", () => {

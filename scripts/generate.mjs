@@ -419,14 +419,28 @@ function addKnowledge(entries, substitutions) {
   });
 }
 
-function addSessionStart(entries, adaptersDir) {
-  const source = join(adaptersDir, "vibe", "scripts", "session-start.sh");
+function addVibeScripts(entries, adaptersDir) {
+  const sourceDir = join(adaptersDir, "vibe", "scripts");
+  if (!existsSync(sourceDir)) return;
+  for (const file of walk(sourceDir)) {
+    const name = toPosix(relative(sourceDir, file));
+    entries.set(`ai.mistral.vibe/scripts/${name}`, {
+      content: readFileSync(file),
+      mode: name.endsWith(".sh") ? 0o755 : 0o644,
+      transform: false,
+      sourcePath: `vibe/scripts/${name}`,
+    });
+  }
+}
+
+function addChainManifest(entries, adaptersDir) {
+  const source = join(adaptersDir, "vibe", "chain.tsv");
   if (!existsSync(source)) return;
-  entries.set("ai.mistral.vibe/scripts/session-start.sh", {
+  entries.set("ai.mistral.vibe/chain.tsv", {
     content: readFileSync(source),
-    mode: 0o755,
+    mode: 0o644,
     transform: false,
-    sourcePath: "vibe/scripts/session-start.sh",
+    sourcePath: "vibe/chain.tsv",
   });
 }
 
@@ -440,7 +454,8 @@ function buildEntries(vendorDir, adaptersDir, substitutions) {
   addHooks(entries, adaptersDir);
   addAgents(entries, vendorDir, adaptersDir, substitutions);
   addKnowledge(entries, substitutions);
-  addSessionStart(entries, adaptersDir);
+  addVibeScripts(entries, adaptersDir);
+  addChainManifest(entries, adaptersDir);
   addRootFile(entries, vendorDir, "LICENSE");
   addRootFile(entries, ROOT, "NOTICE.md");
   addForks(entries, adaptersDir);

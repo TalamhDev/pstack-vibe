@@ -86,7 +86,38 @@ else
   fail "hook file at $plugin_dir/ai.mistral.vibe/hooks.toml is missing"
 fi
 
-# 5. The model sheet is present.
+# 5. The chain manifest is installed and names only playbooks that are.
+chain="$plugin_dir/ai.mistral.vibe/chain.tsv"
+if [ ! -f "$chain" ]; then
+  fail "chain: chain.tsv is missing from $plugin_dir/ai.mistral.vibe; reinstall the plugin"
+else
+  playbooks=$(awk -F'\t' '
+    /^#/ || /^[[:space:]]*$/ { next }
+    !header { header = 1; next }
+    $1 != "session" && !seen[$1]++ { print $1 }
+  ' "$chain")
+  missing_playbooks=""
+  for name in $playbooks; do
+    if [ ! -f "$plugin_dir/skills/poteto-mode/playbooks/$name.md" ]; then
+      missing_playbooks="$missing_playbooks $name"
+    fi
+  done
+  if [ -n "$missing_playbooks" ]; then
+    fail "chain: chain.tsv names playbooks that are not installed:$missing_playbooks"
+  else
+    pass "chain: chain.tsv is installed and names only installed playbooks"
+  fi
+fi
+
+# 6. The chain recorder can write its evidence.
+data="${PLUGIN_DATA:-$base/plugin-data/pstack}"
+if mkdir -p "$data" 2>/dev/null && [ -w "$data" ]; then
+  pass "chain: $data is writable"
+else
+  fail "chain: $data is not writable; the chain recorder cannot write evidence"
+fi
+
+# 7. The model sheet is present.
 if [ -f "$sheet" ]; then
   pass "model sheet at $sheet"
 else
@@ -164,7 +195,7 @@ alias_for() {
   return 1
 }
 
-# 6. Every pstack-* profile named on a role line is installed.
+# 8. Every pstack-* profile named on a role line is installed.
 if [ ! -f "$sheet" ]; then
   fail "agent profiles: cannot check without a model sheet"
 else
@@ -184,7 +215,7 @@ else
   fi
 fi
 
-# 7. Every family the sheet names has an alias, and that alias exists in config.toml.
+# 9. Every family the sheet names has an alias, and that alias exists in config.toml.
 if [ ! -f "$sheet" ]; then
   fail "model aliases: cannot check without a model sheet"
 else

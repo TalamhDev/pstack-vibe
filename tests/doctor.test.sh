@@ -180,4 +180,41 @@ run_doctor
 expect_status 1
 expect_output 'FAIL  agent profiles missing for: pstack-ghost'
 
+# restore a passing install before the chain checks
+cat > "$VIBE_HOME/pstack-models.md" <<'EOF'
+# pstack model configuration
+# deepseek: deepseek-flash
+feature, refactoring: pstack-deepseek
+EOF
+run_doctor
+expect_status 0
+expect_output 'PASS  chain: chain.tsv is installed and names only installed playbooks'
+expect_output 'PASS  chain: .* is writable'
+
+# a missing chain manifest fails
+mv "$VIBE_HOME/plugins/pstack/ai.mistral.vibe/chain.tsv" "$tmp/chain.tsv"
+run_doctor
+expect_status 1
+expect_output 'FAIL  chain: chain.tsv is missing from'
+mv "$tmp/chain.tsv" "$VIBE_HOME/plugins/pstack/ai.mistral.vibe/chain.tsv"
+
+# a chain manifest naming a playbook that is not installed fails
+cp "$VIBE_HOME/plugins/pstack/ai.mistral.vibe/chain.tsv" "$tmp/chain.tsv"
+printf 'ghost-playbook\tghost\talways\tevidence\trequire\tghost\tno such playbook\n' \
+  >> "$VIBE_HOME/plugins/pstack/ai.mistral.vibe/chain.tsv"
+run_doctor
+expect_status 1
+expect_output 'FAIL  chain: chain.tsv names playbooks that are not installed: ghost-playbook'
+cp "$tmp/chain.tsv" "$VIBE_HOME/plugins/pstack/ai.mistral.vibe/chain.tsv"
+
+# a read-only plugin data directory fails
+mkdir -p "$VIBE_HOME/plugin-data/pstack"
+chmod 500 "$VIBE_HOME/plugin-data/pstack"
+run_doctor
+expect_status 1
+expect_output 'FAIL  chain: .* is not writable'
+chmod 700 "$VIBE_HOME/plugin-data/pstack"
+run_doctor
+expect_status 0
+
 echo "doctor: PASS"

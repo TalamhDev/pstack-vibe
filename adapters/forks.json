@@ -47,6 +47,11 @@
       "reason": "Git worktree workers, Vibe spawn fields, and the pstack-deepseek coordinator."
     },
     {
+      "path": "skills/poteto-mode/playbooks/feature.md",
+      "source": "adapters/forks/skills/poteto-mode/playbooks/feature.md",
+      "reason": "the chain audit's gate contract"
+    },
+    {
       "path": "skills/poteto-mode/playbooks/opening-a-pr.md",
       "source": "adapters/forks/skills/poteto-mode/playbooks/opening-a-pr.md",
       "reason": "Vibe worktree notes, the deslop skip line, and the gh PR flow."

@@ -82,4 +82,15 @@ echo "session-start: PASS (missing sheet)"
 check_context "$tmp/derived.json" "$root/generated/vibe"
 echo "session-start: PASS (derives plugin root)"
 
+mkdir -p "$tmp/rundir"
+printf '{"session_id": "sess-run", "cwd": "%s"}\n' "$tmp/rundir" \
+  | HOME="$tmp/home" PLUGIN_ROOT="$root/generated/vibe" PLUGIN_DATA="$tmp/data" \
+    sh "$script" > "$tmp/run.json"
+check_context "$tmp/run.json" "$tmp/data/runs/sess-run"
+if [ ! -f "$tmp/data/runs/sess-run/ready" ]; then
+  echo "session-start: FAIL (no ready marker in the run directory)" >&2
+  exit 1
+fi
+echo "session-start: PASS (names the run directory and marks it ready)"
+
 echo "session-start: PASS"

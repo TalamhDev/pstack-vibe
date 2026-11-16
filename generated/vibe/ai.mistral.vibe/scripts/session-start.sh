@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
 
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck disable=SC1091 # json.sh is checked on its own in the same glob
+. "$script_dir/json.sh"
+
 # Vibe runs plugin hooks from the plugin's pinned copy, so the session folder
 # arrives in the payload's `cwd`. Read it when stdin is a pipe, then fall back
 # to the current directory and the user-level sheet for a direct invocation.
@@ -14,6 +18,11 @@ if [ -n "$payload" ]; then
   cwd="$(printf '%s\n' "$payload" | sed -n 's/.*"cwd"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
 fi
 
+session=""
+if [ -n "$payload" ]; then
+  session="$(printf '%s\n' "$payload" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+fi
+
 sheet=""
 if [ -n "$cwd" ] && [ -f "$cwd/.vibe/pstack-models.md" ]; then
   sheet="$cwd/.vibe/pstack-models.md"
@@ -25,9 +34,23 @@ fi
 
 root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
 
+# The recorder writes only into a run directory that carries this marker, so a
+# session that never opened one records nothing.
+run_dir=""
+if [ -n "$session" ]; then
+  data="${PLUGIN_DATA:-${HOME:-.}/.vibe/plugin-data/pstack}"
+  run_dir="$data/runs/$session"
+  if ! mkdir -p "$run_dir" 2>/dev/null || ! : > "$run_dir/ready" 2>/dev/null; then
+    run_dir=""
+  fi
+fi
+
 {
   printf '%s\n\n' "pstack is installed. For rigorous work, invoke /pstack:poteto-mode (or /poteto-mode)."
   printf 'Plugin root: %s\n' "$root"
+  if [ -n "$run_dir" ]; then
+    printf 'Run directory: %s\n' "$run_dir"
+  fi
   printf 'Adapter: %s\n' "$root/ai.mistral.vibe/knowledge/pstack-vibe/KNOWLEDGE.md"
   printf 'Role table: %s\n' "$root/ai.mistral.vibe/knowledge/pstack-models/KNOWLEDGE.md"
   if [ -n "$sheet" ]; then
@@ -36,33 +59,8 @@ root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
   else
     printf '%s\n' "No model sheet found. Run /pstack:setup-pstack to configure model roles."
   fi
-} | awk '
-function escape(s,   out, i, c, code) {
-  out = ""
-  for (i = 1; i <= length(s); i++) {
-    c = substr(s, i, 1)
-    if (c == "\\") out = out "\\\\"
-    else if (c == q) out = out "\\\""
-    else if (c == "\t") out = out "\\t"
-    else if (c == "\r") out = out "\\r"
-    else if (c == bs) out = out "\\b"
-    else if (c == ff) out = out "\\f"
-    else {
-      code = index(ctrl, c)
-      if (code > 0) out = out sprintf("\\u%04x", code)
-      else out = out c
-    }
-  }
-  return out
-}
-BEGIN {
-  ctrl = ""
-  for (i = 1; i < 32; i++) ctrl = ctrl sprintf("%c", i)
-  bs = sprintf("%c", 8)
-  ff = sprintf("%c", 12)
-  q = sprintf("%c", 34)
-  printf "{\"hook_specific_output\":{\"additional_context\":\""
-}
+} | awk "$JSON_ESCAPE_AWK"'
+BEGIN { printf "{\"hook_specific_output\":{\"additional_context\":\"" }
 {
   printf "%s\\n", escape($0)
 }

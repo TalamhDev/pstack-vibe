@@ -16,7 +16,7 @@
 6. Rebase into small, ordered commits. Stack follow-ups.
    Use the **sequence-verifiable-units** principle skill, building, verifying, and committing each small unit before the next.
 7. If the design is contested, `interrogate` before shipping.
-8. Run **Opening a PR**.
+8. Run **Opening a PR**. The chain audit blocks `gh pr create` until every `feature` and `opening-a-pr` row in `chain.tsv` has evidence. Write the PR body to a file and pass `--body-file`; the gate reads that file and checks the required `##` sections, the Conventional Commits title, and that the PR is not a draft.
 
 Code-coupled work (one feature, one migration) goes to a single owner with the checkpoint inline. That owner fans out internally after the blocking phase. Parent-level fan-out is for slices that produce independent artifacts (audits, cross-subsystem investigations, competing experiments). Rewrite the checkpoint at phase boundaries. Spawn a fresh owner rather than chaining interrupts.
 
