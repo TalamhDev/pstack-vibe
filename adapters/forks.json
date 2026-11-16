@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "forks": [
+    {
+      "path": "skills/poteto-mode/SKILL.md",
+      "source": "adapters/forks/skills/poteto-mode/SKILL.md",
+      "reason": "Vibe subagent fields, asynchronous reports, model profiles, and skill loading by path."
+    },
+    {
+      "path": "skills/setup-pstack/SKILL.md",
+      "source": "adapters/forks/skills/setup-pstack/SKILL.md",
+      "reason": "Vibe config detection, model sheet, generated agents, and the three key role choices."
+    },
+    {
+      "path": "skills/arena/SKILL.md",
+      "source": "adapters/forks/skills/arena/SKILL.md",
+      "reason": "Vibe agent profiles for three-family runners, a cross-family judge pool, and worktree candidates."
+    },
+    {
+      "path": "skills/swarm/SKILL.md",
+      "source": "adapters/forks/skills/swarm/SKILL.md",
+      "reason": "Vibe spawn fields, the worker profile, and worktree workers with the base branch in the brief."
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "source": "adapters/forks/skills/reflect/SKILL.md",
+      "reason": "Vibe spawn fields, session log location, MCP-capable reviewers, and model profiles."
+    },
+    {
+      "path": "skills/interrogate/SKILL.md",
+      "source": "adapters/forks/skills/interrogate/SKILL.md",
+      "reason": "GLM and DeepSeek adversaries, Vibe spawn fields, and security findings routed to the security review role."
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "source": "adapters/forks/skills/how/SKILL.md",
+      "reason": "Read-only exploration through the pstack:readonly profile and asynchronous reports."
+    },
+    {
+      "path": "skills/no-comments/SKILL.md",
+      "source": "adapters/forks/skills/no-comments/SKILL.md",
+      "reason": "The comment-sicko profile and asynchronous reports."
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/orchestrate.md",
+      "source": "adapters/forks/skills/poteto-mode/playbooks/orchestrate.md",
+      "reason": "Git worktree workers, Vibe spawn fields, and the pstack-deepseek coordinator."
+    },
+    {
+      "path": "skills/poteto-mode/playbooks/opening-a-pr.md",
+      "source": "adapters/forks/skills/poteto-mode/playbooks/opening-a-pr.md",
+      "reason": "Vibe worktree notes, the deslop skip line, and the gh PR flow."
+    },
+    {
+      "path": "skills/poteto-help/SKILL.md",
+      "source": "adapters/forks/skills/poteto-help/SKILL.md",
+      "reason": "Vibe install, links, subagent names, and the adapter doc."
+    },
+    {
+      "path": "skills/poteto-mode/references/bugbot-triage.md",
+      "source": "adapters/forks/skills/poteto-mode/references/bugbot-triage.md",
+      "reason": "GitHub security review threads and the security review role."
+    },
+    {
+      "path": "skills/architect/SKILL.md",
+      "source": "adapters/forks/skills/architect/SKILL.md",
+      "reason": "The todo list in the reply and the Vibe model sheet runners."
+    },
+    {
+      "path": "skills/reflect/references/synthesizer.md",
+      "source": "adapters/forks/skills/reflect/references/synthesizer.md",
+      "reason": "Vibe's builtin skill-creator routing label."
+    },
+    {
+      "path": "skills/poteto-mode/scripts/worktree-audit.sh",
+      "source": "adapters/forks/skills/poteto-mode/scripts/worktree-audit.sh",
+      "reason": "Vibe session logs at ~/.vibe/logs/session/ instead of Cursor agent transcripts."
+    }
+  ]
+}

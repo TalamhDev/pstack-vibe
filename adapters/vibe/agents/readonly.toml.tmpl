@@ -1,0 +1,11 @@
+schema_version = 1
+agent_type = "subagent"
+display_name = "pstack readonly"
+description = "Read-only explorer for pstack. Never modifies files."
+instructions = """
+{{INSTRUCTIONS}}
+"""
+enabled_tools = ["read_file", "skill", "bash"]
+
+[tools.bash]
+allowlist = ["rg", "grep", "find", "ls", "cat", "head", "tail", "wc"]

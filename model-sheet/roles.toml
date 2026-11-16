@@ -1,0 +1,21 @@
+version = 1
+upstream_version = "0.15.42"
+budget = "large"
+parent = "pstack-deepseek"
+
+[roles]
+"feature, refactoring" = ["pstack-deepseek"]
+"bug-fix" = ["pstack-deepseek"]
+"perf-issue" = ["pstack-deepseek"]
+"hillclimb" = ["pstack-deepseek"]
+"judgment and prose" = ["pstack-deepseek"]
+"hardest tasks" = ["pstack-deepseek"]
+"reflect tooling" = ["pstack-deepseek"]
+"reflect judgment, divergent, synthesizer" = ["pstack-deepseek"]
+"swarm workers" = ["pstack-deepseek"]
+"arena runners" = ["pstack-deepseek", "pstack-glm", "pstack-ml4"]
+"arena cross-judge pool" = ["pstack-glm", "pstack-ml4", "pstack-deepseek"]
+"architect runners" = ["pstack-deepseek", "pstack-glm"]
+"interrogate reviewers" = ["pstack-glm", "pstack-deepseek"]
+"security review" = ["pstack-ml4"]
+"formal verification" = ["pstack-deepseek"]

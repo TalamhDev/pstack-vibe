@@ -1,0 +1,17 @@
+{
+  "name": "pstack-vibe",
+  "version": "0.15.42-vibe.1",
+  "private": true,
+  "type": "module",
+  "description": "pstack for the Mistral Vibe CLI",
+  "license": "MIT",
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "check": "node scripts/generate.mjs --check",
+    "test": "node --test tests/*.test.mjs",
+    "test:shell": "sh tests/install.test.sh && sh tests/doctor.test.sh && sh tests/session-start.test.sh"
+  },
+  "devDependencies": {
+    "smol-toml": "^1.9.1"
+  }
+}
