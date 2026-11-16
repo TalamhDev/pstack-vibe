@@ -11,6 +11,18 @@ The port is independent. It is not endorsed by Lauren Tan, Mistral, or Cursor. T
 project is [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/main/pstack), and
 the vendored copy, pin, and license are recorded in [NOTICE.md](./NOTICE.md).
 
+## Work in progress
+
+This port is a work in progress and is not released. It is being actively worked on, and
+nothing here carries a reasonable guarantee of working: the plugin format, the generated
+tree, the installer, the model sheet, and the agent profiles can all change or break between
+commits. Treat any usage as an experiment on a checkout you are willing to throw away, and
+expect rough edges rather than support.
+
+When an initial release is ready, this page will be updated and installations will be
+available through npm and npx. Until then, the only install path is the clone-and-run
+installer below.
+
 ## Install
 
 Clone the repository, then run the installer:
@@ -51,6 +63,9 @@ no build step. If you only have the plugin tree, copy `generated/vibe/` to
 
 Start a new session, or run `/reload-plugins`, after installing. Vibe reads plugins at
 session start.
+
+There is no npm or npx install yet. Those arrive with the initial release, and this section
+will be replaced when they do.
 
 ## Setup
 
