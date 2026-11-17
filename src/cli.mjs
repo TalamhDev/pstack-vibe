@@ -125,7 +125,7 @@ const COMMANDS = {
  * @typedef {{ kind: "install", verb: "install" | "update", scope: string, force: boolean, dryRun: boolean }
  *   | { kind: "uninstall", scope: string, purge: boolean, dryRun: boolean }
  *   | { kind: "doctor", scope: string }
- *   | { kind: "verify", scope: string }
+ *   | { kind: "verify" }
  *   | { kind: "help" }} Command
  */
 
@@ -165,7 +165,12 @@ export function parseArgs(argv) {
 
   if (verb === "uninstall") return { kind: "uninstall", scope, purge, dryRun };
   if (verb === "doctor") return { kind: "doctor", scope };
-  if (verb === "verify") return { kind: "verify", scope };
+  if (verb === "verify") {
+    if (scope === "project") {
+      throw new UsageError("verify always builds a temporary Vibe home; drop --project");
+    }
+    return { kind: "verify" };
+  }
   return { kind: "install", verb, scope, force: force ?? COMMANDS[verb].force, dryRun };
 }
 

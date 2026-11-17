@@ -344,6 +344,12 @@ test("the CLI rejects an unknown argument with exit 2", async () => {
   assert.match(result.stderr, /usage: pstack-vibe/);
 });
 
+test("verify rejects --project instead of ignoring it", async () => {
+  const result = await runCli(["verify", "--project"], {});
+  assert.equal(result.exitCode, 2);
+  assert.match(result.stderr, /drop --project/);
+});
+
 test("the CLI prints usage for --help", async () => {
   const result = await runCli(["--help"], {});
   assert.equal(result.exitCode, 0);
