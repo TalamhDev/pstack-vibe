@@ -27,7 +27,7 @@ directory.
 removes the model sheet and the `pstack-*.toml` profiles. It does not remove model entries
 that setup added to `config.toml`; delete those by hand if you added them.
 
-## Hooks execute shell commands
+## Hooks execute commands
 
 The plugin registers one `session_start` hook:
 
@@ -35,15 +35,15 @@ The plugin registers one `session_start` hook:
 [[hooks]]
 name = "pstack-context"
 type = "session_start"
-command = "sh \"$PLUGIN_ROOT/ai.mistral.vibe/scripts/session-start.sh\""
+command = "node ai.mistral.vibe/scripts/session-start.mjs"
 ```
 
-That command runs a shell script at the start of every session. The script names the plugin
+That command runs a Node script at the start of every session. The script names the plugin
 root, the adapter doc, and the role table, reads the model sheet, and points at
 `/pstack:poteto-mode`. It does not make network calls, and it does not write files.
 
 A hook is code, not configuration. Read
-`~/.vibe/plugins/pstack/ai.mistral.vibe/scripts/session-start.sh` before you install a
+`~/.vibe/plugins/pstack/ai.mistral.vibe/scripts/session-start.mjs` before you install a
 release you did not build. If you do not want the hook to run, remove the `[[hooks]]` entry
 from `ai.mistral.vibe/hooks.toml` or uninstall the plugin.
 

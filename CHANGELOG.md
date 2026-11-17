@@ -19,6 +19,8 @@ All notable changes to pstack-vibe are recorded here. The format follows
   in `doctor` and not only at install time.
 - A CI `compat` matrix that runs `verify` against every version in `vibe.tested`, so the
   declared range cannot drift from the versions that actually pass.
+- Windows support. `install`, `doctor`, and `verify` work on Windows, and CI runs the test
+  suite and `verify` there.
 
 ### Changed
 
@@ -32,11 +34,16 @@ All notable changes to pstack-vibe are recorded here. The format follows
   `install --force`.
 - The package is publishable. `private` is removed, and `bin`, `exports`, `files`, and
   `engines` are set.
+- The session-start hook and the chain scripts are Node, not POSIX `sh`. `hooks.toml` invokes
+  `node` on a path relative to the plugin root, so the hook commands work everywhere Vibe
+  runs them, including PowerShell on Windows.
 
 ### Removed
 
 - `scripts/install.sh`, `scripts/doctor.sh`, `scripts/remove-tree.sh`, and their three shell
   tests, replaced by `src/` and the Node test suites.
+- `adapters/vibe/scripts/session-start.sh`, `chain.sh`, and `json.sh`, and their three shell
+  tests, replaced by `session-start.mjs`, `chain.mjs`, and the Node test suites.
 
 ## [0.15.42-vibe.1] - 2026-11-16
 
