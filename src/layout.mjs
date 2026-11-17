@@ -27,8 +27,7 @@ export class LayoutError extends Error {
  */
 
 /**
- * Every path this package reasons about, resolved once. `cwd` is a parameter so
- * the CLI is the only caller that reads ambient state.
+ * `cwd` is a parameter so the CLI is the only caller that reads ambient state.
  *
  * @param {{ scope: Scope, env: Env, cwd: string }} options
  * @returns {Layout}

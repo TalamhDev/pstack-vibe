@@ -64,8 +64,8 @@ function toDriveOutcome(driven) {
  */
 
 /**
- * The one command that answers "does this work here". It never touches the real
- * Vibe home: it builds a throwaway one, and keeps it only when something failed.
+ * Never touches the real Vibe home: it builds a throwaway one, and keeps it only
+ * when something failed.
  *
  * @param {VerifyRequest} request
  * @returns {Promise<VerifyReport>}

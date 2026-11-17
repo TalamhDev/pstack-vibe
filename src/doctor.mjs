@@ -39,7 +39,6 @@ async function listSkillNames(skillsDir) {
   return names.sort();
 }
 
-/** Column 1 of every non-comment, non-header row, minus the `session` rows. */
 function parseChainPlaybooks(text) {
   const names = [];
   let header = false;
@@ -243,7 +242,6 @@ const vibeCompat = {
  * @typedef {{ id: string, run: (ctx: DoctorContext) => { ok: boolean, detail: string } | Promise<{ ok: boolean, detail: string }> }} DoctorCheck
  */
 
-/** Adding a check is appending a row. There is no dispatcher to extend. */
 export const CHECKS = [
   vibeOnPath,
   pluginManifest,
@@ -257,11 +255,6 @@ export const CHECKS = [
   vibeCompat,
 ];
 
-/**
- * The probe, the sheet parse, and the config alias scan are resolved once here,
- * before any check runs, so a check that reads them costs no extra process or
- * file read.
- */
 export async function doctor({ layout, vibe }) {
   const bounds = supportedBounds(TESTED_VIBE_VERSIONS);
   const ctx = {

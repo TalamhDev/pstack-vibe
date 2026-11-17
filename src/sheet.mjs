@@ -27,10 +27,10 @@ export function familyForProfile(profile) {
  */
 
 /**
- * The port of the doctor's sheet awk. A family line is `# <family>: <alias>`
- * with the alias as the whole value, so a prose note that happens to start with
- * a key is not read as a family. A role line is any non-blank line that is not a
- * comment, and its `pstack-*` tokens are profile names.
+ * A family line is `# <family>: <alias>` with the alias as the whole value, so a
+ * prose note that happens to start with a key is not read as a family. A role
+ * line is any non-blank line that is not a comment, and its `pstack-*` tokens are
+ * profile names.
  *
  * @param {string} text
  * @returns {Sheet}
@@ -67,9 +67,6 @@ export function parseSheet(text) {
 }
 
 /**
- * The port of the doctor's config.toml alias awk: strip comments, take the value
- * of every `alias =` line, and drop the surrounding quotes.
- *
  * @param {string} text
  * @returns {ReadonlySet<string>}
  */
@@ -87,7 +84,7 @@ export function parseConfigAliases(text) {
   return aliases;
 }
 
-/** `null` when the sheet is absent or unreadable, matching the shell's `[ -f ]`. */
+/** `null` when the sheet is absent or unreadable, so callers branch on it. */
 export async function readSheet(path) {
   try {
     return parseSheet(await readFile(path, "utf8"));
@@ -96,7 +93,7 @@ export async function readSheet(path) {
   }
 }
 
-/** An empty set when `config.toml` is absent, matching the shell's `[ ! -f ]`. */
+/** An empty set when `config.toml` is absent, so callers need no null branch. */
 export async function readConfigAliases(path) {
   try {
     return parseConfigAliases(await readFile(path, "utf8"));

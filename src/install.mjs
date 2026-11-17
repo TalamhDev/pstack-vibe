@@ -77,8 +77,8 @@ async function listPstackProfiles(agentsDir) {
  */
 
 /**
- * The one write boundary. The gate is the first statement, so every caller that
- * installs a plugin is gated whether or not it remembered to check.
+ * The only path that writes a plugin tree. The gate is the first statement, so
+ * every caller that installs is gated whether or not it remembered to check.
  *
  * @param {InstallRequest} request
  * @returns {Promise<InstallResult>}
