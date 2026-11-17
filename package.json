@@ -9,7 +9,7 @@
     "generate": "node scripts/generate.mjs",
     "check": "node scripts/generate.mjs --check",
     "test": "node --test tests/*.test.mjs",
-    "test:shell": "sh tests/install.test.sh && sh tests/doctor.test.sh && sh tests/session-start.test.sh && sh tests/chain-record.test.sh && sh tests/chain-gate.test.sh",
+    "test:shell": "sh tests/install.test.sh && sh tests/doctor.test.sh && sh tests/session-start.test.sh && sh tests/chain-record.test.sh && sh tests/chain-gate.test.sh && sh tests/remove-tree.test.sh",
     "lint": "shellcheck scripts/*.sh generated/vibe/ai.mistral.vibe/scripts/*.sh && npx --yes markdownlint-cli2 \"README.md\" \"NOTICE.md\" \"SECURITY.md\" \"CHANGELOG.md\" \"docs/**/*.md\" && npx --yes github-actionlint",
     "verify": "npm test && npm run test:shell && npm run check && npm run lint"
   },

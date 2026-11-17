@@ -130,8 +130,9 @@ never remove `$RUN_DIR/artifacts`. Run cleanup after a failed iteration too, so 
 broken attempt does not leave a home behind that the next run mistakes for its own.
 
 Vibe pins read-only plugin snapshots under `$VIBE_HOME/logs/session/plugins/`, so a
-plain `rm -rf` leaves the home behind with `Permission denied`. The helper chmods the
-tree writable first and fails loudly if the home survives.
+plain `rm -rf` leaves the home behind with `Permission denied`. `cleanup` delegates to
+`scripts/remove-tree.sh`, which chmods the tree writable first and fails loudly if the
+home survives.
 
 ## Helpers
 
@@ -149,7 +150,8 @@ prints the run directory and whether it is launched. Set `RUN_ID` to name a run,
   proves that sheet instead.
 - **A driven session writes read-only snapshots into the home.** Vibe pins each plugin
   under `$VIBE_HOME/logs/session/plugins/` with no write bit, so `rm -rf` on the home
-  fails with `Permission denied`. Chmod before removing; `cleanup` does.
+  fails with `Permission denied`. Chmod before removing; `scripts/remove-tree.sh` does,
+  and `cleanup` calls it.
 - **`npm install` first.** A fresh clone has no `node_modules`, so `npm run check` and
   `npm test` fail with `ERR_MODULE_NOT_FOUND`. `launch` handles it; a bare `npm test`
   does not.
