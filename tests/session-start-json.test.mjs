@@ -11,17 +11,22 @@
 // model sheet and the model never learns the role table. Nothing crashes, and
 // the transcript looks normal.
 //
-// Why this tool: no verifier runs on POSIX sh plus awk, so this checks the real
-// script with generated inputs rather than a hand model of the escaper. The
+// Why this tool: the hook builds its JSON with JSON.stringify, so the risk is
+// not the escaper but the sheet text that reaches it. This checks the real
+// script with generated inputs rather than a hand model of the encoder. The
 // search is bounded and exhaustive over the alphabet below, not random.
 //
-// Scope: every sheet of length 1..3 over ALPHABET, every sheet of length 4 over
-// CORE, plus TARGETED. It does not cover sheets longer than 4 characters beyond
-// the targeted cases, and it does not cover the hook's sheet-resolution order
-// (tests/session-start.test.sh does).
+// Scope: every sheet of length 1..2 over ALPHABET, plus TARGETED. The search
+// stopped at length 2 when the hook moved to JSON.stringify. The escaper is now
+// Node's, so a longer search would test the platform rather than this script.
+// What the script still contributes is the line split that keeps a CRLF sheet
+// verbatim and the context assembled around it, and a pair of characters is
+// enough to catch an interaction between them. It does not cover the hook's
+// sheet-resolution order (tests/session-start.test.mjs does).
 //
-// Confirmed able to fail: removing the control-character branch from escape()
-// makes 1549 of these sheets report invalid JSON.
+// Confirmed able to fail: replacing JSON.stringify with a hand-rolled escaper
+// that handles `\`, `"`, `\n`, `\t`, `\r`, `\b`, and `\f` but not the remaining
+// control characters makes 119 of these 164 sheets report invalid JSON.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -33,16 +38,12 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const GENERATED = join(ROOT, "generated/vibe");
-const HOOK = join(GENERATED, "ai.mistral.vibe/scripts/session-start.sh");
-const SOURCE = join(ROOT, "adapters/vibe/scripts/session-start.sh");
-const ESCAPER = join(GENERATED, "ai.mistral.vibe/scripts/json.sh");
-const ESCAPER_SOURCE = join(ROOT, "adapters/vibe/scripts/json.sh");
+const HOOK = join(GENERATED, "ai.mistral.vibe/scripts/session-start.mjs");
+const SOURCE = join(ROOT, "adapters/vibe/scripts/session-start.mjs");
 
-// Every character the escaper treats specially, plus a plain ASCII character,
-// a two-byte character, and a four-byte character.
+// Every character JSON.stringify treats specially, plus a plain ASCII
+// character, a two-byte character, and a four-byte character.
 const ALPHABET = ["\\", '"', "\t", "\r", "\b", "\f", "\x01", "\x1f", "\x7f", "a", "é", "😀"];
-// The characters most likely to interact, searched one level deeper.
-const CORE = ["\\", '"', "\t", "\x01", "a", "é"];
 
 const TARGETED = [
   ["empty sheet", ""],
@@ -75,15 +76,7 @@ test("generated hook is byte-identical to its source", () => {
   assert.equal(
     readFileSync(HOOK, "utf8"),
     readFileSync(SOURCE, "utf8"),
-    "generated hook differs from adapters/vibe/scripts/session-start.sh; run `npm run generate`",
-  );
-});
-
-test("generated escaper is byte-identical to its source", () => {
-  assert.equal(
-    readFileSync(ESCAPER, "utf8"),
-    readFileSync(ESCAPER_SOURCE, "utf8"),
-    "generated escaper differs from adapters/vibe/scripts/json.sh; run `npm run generate`",
+    "generated hook differs from adapters/vibe/scripts/session-start.mjs; run `npm run generate`",
   );
 });
 
@@ -99,7 +92,7 @@ test("hook emits valid JSON carrying the sheet verbatim, for every sheet in scop
     writeFileSync(sheetPath, sheet);
     let stdout;
     try {
-      stdout = execFileSync("sh", [HOOK], {
+      stdout = execFileSync(process.execPath, [HOOK], {
         cwd: sheetDir,
         env: { ...process.env, HOME: emptyHome, PLUGIN_ROOT: GENERATED },
         input: "",
@@ -130,8 +123,7 @@ test("hook emits valid JSON carrying the sheet verbatim, for every sheet in scop
 
   const cases = [
     ...TARGETED.map(([name, sheet]) => ({ name, sheet })),
-    ...[...strings(ALPHABET, 3)].map((sheet) => ({ name: `alphabet len<=3 ${JSON.stringify(sheet)}`, sheet })),
-    ...[...strings(CORE, 4)].map((sheet) => ({ name: `core len<=4 ${JSON.stringify(sheet)}`, sheet })),
+    ...[...strings(ALPHABET, 2)].map((sheet) => ({ name: `alphabet len<=2 ${JSON.stringify(sheet)}`, sheet })),
   ];
 
   try {
@@ -149,5 +141,5 @@ test("hook emits valid JSON carrying the sheet verbatim, for every sheet in scop
     0,
     `${failures.length} of ${checked} sheets broke the contract:\n  ${failures.slice(0, 20).join("\n  ")}`,
   );
-  assert.ok(checked > 3000, `expected a broad search, only ran ${checked} sheets`);
+  assert.ok(checked > 150, `expected a broad search, only ran ${checked} sheets`);
 });

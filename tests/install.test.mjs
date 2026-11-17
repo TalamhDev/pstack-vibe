@@ -7,7 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
-  statSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -63,13 +63,16 @@ test("install writes the plugin manifest, a skill, and the hook file", async () 
   }
 });
 
-test("install keeps the hook scripts executable", async () => {
+test("install ships the hook scripts as readable files", async () => {
   const work = scratch();
   try {
     const layout = userLayout(join(work, "home"));
     await install(layout);
-    const mode = statSync(join(layout.pluginDir, "ai.mistral.vibe/scripts/chain.sh")).mode;
-    assert.notEqual(mode & 0o111, 0, "the installed chain.sh is not executable");
+    for (const name of ["chain.mjs", "session-start.mjs"]) {
+      const path = join(layout.pluginDir, "ai.mistral.vibe/scripts", name);
+      assert.ok(existsSync(path), `the installed ${name} is missing`);
+      assert.ok(readFileSync(path, "utf8").length > 0, `the installed ${name} is empty`);
+    }
   } finally {
     await removeTree(work);
   }

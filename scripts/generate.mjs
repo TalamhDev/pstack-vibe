@@ -426,7 +426,7 @@ function addVibeScripts(entries, adaptersDir) {
     const name = toPosix(relative(sourceDir, file));
     entries.set(`ai.mistral.vibe/scripts/${name}`, {
       content: readFileSync(file),
-      mode: name.endsWith(".sh") ? 0o755 : 0o644,
+      mode: 0o644,
       transform: false,
       sourcePath: `vibe/scripts/${name}`,
     });

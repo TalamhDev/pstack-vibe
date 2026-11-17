@@ -191,12 +191,12 @@ test("the chain manifest and every vibe script are generated with their modes", 
   );
 
   const sourceDir = join(root, "adapters/vibe/scripts");
-  const names = readdirSync(sourceDir).filter((name) => name.endsWith(".sh"));
-  assert.ok(names.length >= 3, `expected the vibe scripts, found ${names.join(", ")}`);
+  const names = readdirSync(sourceDir).filter((name) => name.endsWith(".mjs"));
+  assert.ok(names.length >= 2, `expected the vibe scripts, found ${names.join(", ")}`);
   for (const name of names) {
     const target = join(out, "ai.mistral.vibe/scripts", name);
     assert.ok(existsSync(target), `${name} is not generated`);
-    assert.equal(statSync(target).mode & 0o777, 0o755, `${name} is not 0755`);
+    assert.equal(statSync(target).mode & 0o777, 0o644, `${name} is not 0644`);
     assert.equal(readFileSync(target, "utf8"), readFileSync(join(sourceDir, name), "utf8"));
   }
 });
