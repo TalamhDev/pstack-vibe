@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { doctor } from "./doctor.mjs";
 import { installPlugin, uninstallPlugin } from "./install.mjs";
 import { PACKAGE_ROOT, resolveLayout } from "./layout.mjs";
 import { createVibeProbe } from "./vibe.mjs";
@@ -16,6 +17,7 @@ const USAGE = `usage: pstack-vibe <command> [options]
   install    copy the generated plugin into the Vibe plugin directory (default)
   update     reinstall over an existing copy (same as install --force)
   uninstall  remove the plugin directory
+  doctor     check the install and print one PASS or FAIL line per check
 
   --project  use ./.vibe instead of $VIBE_HOME (or ~/.vibe)
   --force    replace a directory that is not a pstack plugin
@@ -76,15 +78,23 @@ async function runUninstall(command, io) {
   return 0;
 }
 
+async function runDoctor(command, io) {
+  const report = await doctor({ layout: layoutFor(command.scope), vibe: createVibeProbe() });
+  for (const check of report.checks) io.out(`${check.ok ? "PASS" : "FAIL"}  ${check.detail}`);
+  return report.ok ? 0 : 1;
+}
+
 const COMMANDS = {
   install: { force: false, run: runInstall },
   update: { force: true, run: runInstall },
   uninstall: { force: false, run: runUninstall },
+  doctor: { force: false, run: runDoctor },
 };
 
 /**
  * @typedef {{ kind: "install", verb: "install" | "update", scope: string, force: boolean, dryRun: boolean }
  *   | { kind: "uninstall", scope: string, purge: boolean, dryRun: boolean }
+ *   | { kind: "doctor", scope: string }
  *   | { kind: "help" }} Command
  */
 
@@ -123,6 +133,7 @@ export function parseArgs(argv) {
   }
 
   if (verb === "uninstall") return { kind: "uninstall", scope, purge, dryRun };
+  if (verb === "doctor") return { kind: "doctor", scope };
   return { kind: "install", verb, scope, force: force ?? COMMANDS[verb].force, dryRun };
 }
 
