@@ -5,14 +5,12 @@ Setup is one command plus a short conversation.
 
 ## Install the plugin
 
-From a checkout of this repository:
-
 ```sh
-./scripts/install.sh install
+npx pstack-vibe install
 ```
 
 That copies the generated plugin to `~/.vibe/plugins/pstack`. For a project-local install,
-run `./scripts/install.sh install --project` to write `.vibe/plugins/pstack` instead. Start a
+run `npx pstack-vibe install --project` to write `.vibe/plugins/pstack` instead. Start a
 new session, or run `/reload-plugins`, so Vibe loads it.
 
 Vibe prefixes plugin commands with the plugin name, so the commands in this guide take a
@@ -22,11 +20,11 @@ when the name is unambiguous.
 Check the install at any time:
 
 ```sh
-./scripts/install.sh doctor
+npx pstack-vibe doctor
 ```
 
-It checks Vibe, the manifest, the skills against `skills.manifest`, the hook, the model sheet,
-the profiles, and the model aliases.
+It checks Vibe, the manifest, the skills against `skills.manifest`, the hook, the chain
+manifest, the model sheet, the profiles, the model aliases, and the Vibe version.
 
 ## Pick your models
 

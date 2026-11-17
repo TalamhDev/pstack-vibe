@@ -1,6 +1,6 @@
 # Doctor
 
-Doctor answers one question: is this pstack install worth driving? It runs seven
+Doctor answers one question: is this pstack install worth driving? It runs ten
 read-only checks and prints one `PASS` or `FAIL` line per check, exiting non-zero if
 any check failed. A user runs it after installing, and again whenever a skill or a
 model alias seems to be missing.
@@ -11,15 +11,19 @@ model alias seems to be missing.
 - `doctor-manifest` checks that `plugin.json` exists and names `pstack`.
 - `doctor-skills` compares the installed skills tree against `skills.manifest`.
 - `doctor-hook` checks that `ai.mistral.vibe/hooks.toml` exists.
+- `doctor-chain` checks that `chain.tsv` exists and names only installed playbooks.
+- `doctor-data` checks that the chain recorder's data directory is writable.
 - `doctor-sheet` checks that the model sheet exists.
 - `doctor-profiles` checks that every `pstack-*` profile named on a role line is installed.
 - `doctor-aliases` checks that every family the sheet names has an alias, and that the alias
   exists in `config.toml`.
+- `doctor-compat` checks that the installed Vibe is inside the tested range.
 
 ## How to get to it (user POV)
 
-- Run `./scripts/install.sh doctor` from the repository root.
-- Run `sh scripts/doctor.sh` directly, with `VIBE_HOME` and optionally `PLUGIN_DIR` set.
+- Run `node bin/pstack-vibe.mjs doctor` from the repository root, adding `--project` for a
+  project install.
+- Run `npx pstack-vibe doctor` once the package is published.
 
 ## Driving it with control-pstack
 
@@ -28,7 +32,7 @@ Preconditions:
 - A launched run: `control-pstack launch` has created `$RUN_DIR/home` and installed
   the plugin into it.
 
-- **Healthy install.** Run `control-pstack doctor`. Seven `PASS` lines, no `FAIL`, exit
+- **Healthy install.** Run `control-pstack doctor`. Ten `PASS` lines, no `FAIL`, exit
   code `0`. The skills line reads `PASS  skills: 58 SKILL.md files match skills.manifest`.
 - **Missing sheet.** Remove `$RUN_DIR/home/pstack-models.md`, then run
   `control-pstack doctor`. Exit code is `1`. The sheet line reads `FAIL  model sheet at
@@ -68,9 +72,12 @@ Preconditions:
   line reads `FAIL  model aliases: no alias recorded for family: qwen`. A sheet with no
   family lines and no role naming a profile reads `PASS  model aliases: the sheet
   records no aliases`.
+- **Untested Vibe.** Put a fake `vibe` on `PATH` that reports a version outside the
+  tested range, then run `control-pstack doctor`. Exit code is `1` and the compat line
+  reads `FAIL  vibe <version> is outside the tested range <range>`.
 - **Proof.** Keep the full stdout and exit code of each run under
-  `$RUN_DIR/artifacts/doctor/`. A single `PASS` line is not proof; the seven-line block
-  and the exit code are.
+  `$RUN_DIR/artifacts/doctor/`. A single `PASS` line is not proof; the full block and
+  the exit code are.
 
 ## Gotchas
 
