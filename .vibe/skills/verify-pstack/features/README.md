@@ -21,7 +21,7 @@ as the recipe.
   otherwise.
 - Treat every command as literal. Keep quoted prompts and flags unchanged.
 - Run installer and doctor actions through `control-pstack doctor`, or directly as
-  `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh <command>`.
+  `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs <command>`.
 - Run session actions through `control-pstack drive "<prompt>"`.
 - Read `$RUN_DIR/artifacts/drive-<n>/` for the prompt, stdout, stderr, exit code, and
   export.
@@ -31,7 +31,7 @@ as the recipe.
 
 - Capture the user action and the resulting state, not only the final line.
 - Installer proof includes the command, stdout, and exit code.
-- Doctor proof includes all seven lines, not one `PASS`.
+- Doctor proof includes every line, not one `PASS`.
 - Session proof includes stdout, exit code, and `export/export.json`, whose warnings
   array catches config issues the doctor cannot see.
 - Hook proof is an answer that could only come from the injected sheet.
@@ -58,7 +58,7 @@ required state, commands, and observable proof.
 
 - [Install and remove the plugin](./install.md) covers user and project scope,
   update, dry-run, and purge.
-- [Doctor](./doctor.md) covers the seven install checks and what each failure means.
+- [Doctor](./doctor.md) covers the ten install checks and what each failure means.
 - [Session context](./session-context.md) covers the session-start hook injecting the
   model sheet and the adapter doc into a real session.
 - [Skill invocation](./skill-invocation.md) covers `/pstack:*` skills loading and

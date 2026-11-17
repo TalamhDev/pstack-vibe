@@ -13,15 +13,14 @@ issues, and full documentation live at
 
 ## Install
 
-From a checkout of the repository:
-
 ```sh
-./scripts/install.sh install
+npx pstack-vibe install
 ```
 
 That copies this tree to `~/.vibe/plugins/pstack`. For a project-local install, run
-`./scripts/install.sh install --project` to write `.vibe/plugins/pstack`. Start a new session
-after installing.
+`npx pstack-vibe install --project` to write `.vibe/plugins/pstack`. Start a new session after
+installing. `npx pstack-vibe doctor` checks the result, and `npx pstack-vibe verify` proves the
+hook fires.
 
 ## Setup
 
@@ -55,7 +54,8 @@ MIT, copyright 2026 telamh; upstream's MIT notice is in `LICENSE`.
 
 ## Limitations
 
-- macOS and Linux only.
+- macOS and Linux only. The installer and doctor are Node, but the session-start hook and the
+  chain recorder are POSIX `sh`.
 - The Vibe plugin format is experimental and can change.
 - Cursor-only features are skipped with a one-line note: Bugbot, Cursor webhook routines,
   cloud agents, Custom Modes, and Cursor's built-in `/create-skill`.

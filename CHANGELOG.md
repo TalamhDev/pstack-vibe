@@ -4,6 +4,40 @@ All notable changes to pstack-vibe are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses a
 `<upstream-version>-vibe.<n>` version scheme.
 
+## [Unreleased]
+
+### Added
+
+- `npx pstack-vibe`, a Node CLI with `install`, `update`, `uninstall`, `doctor`, and `verify`.
+- A Vibe compatibility gate. The installer reads `vibe --version` and refuses to install
+  outside the range derived from the `vibe.tested` list in `package.json`, naming both the
+  range and the version it found.
+- `verify`, which installs into a temporary Vibe home, runs the doctor, drives a real session
+  against the local mock provider to prove the session-start hook delivered the model sheet,
+  and removes the home.
+- A tenth doctor check, `vibe-compat`, so a Vibe that upgraded past the tested range shows up
+  in `doctor` and not only at install time.
+- A CI `compat` matrix that runs `verify` against every version in `vibe.tested`, so the
+  declared range cannot drift from the versions that actually pass.
+
+### Changed
+
+- The installer and doctor are Node, not POSIX `sh`. `bin/pstack-vibe.mjs` replaces
+  `scripts/install.sh` and `scripts/doctor.sh`.
+- The install is atomic. It stages a copy inside the plugins directory and renames it into
+  place, so an interrupted install never leaves a half-written plugin.
+- `install` requires `vibe` on `PATH`, including under `--dry-run`, because the gate runs
+  before the dry-run branch.
+- The chain gate forbids `pstack-vibe install --force` as well as `update`, since `update` is
+  `install --force`.
+- The package is publishable. `private` is removed, and `bin`, `exports`, `files`, and
+  `engines` are set.
+
+### Removed
+
+- `scripts/install.sh`, `scripts/doctor.sh`, `scripts/remove-tree.sh`, and their three shell
+  tests, replaced by `src/` and the Node test suites.
+
 ## [0.15.42-vibe.1] - 2026-11-16
 
 The first release. pstack 0.15.42, ported to the Mistral Vibe CLI.

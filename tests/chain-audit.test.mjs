@@ -282,17 +282,38 @@ const CASES = [
     allow: true,
   },
   {
-    name: "install.sh update is forbidden outright",
+    name: "pstack-vibe update is forbidden outright",
     evidence: [...OPENED, ...SIGNED, ...THREE_SPAWNS],
     claim: ["contested no 3/3 three runners"],
-    command: "./scripts/install.sh update",
+    command: "./bin/pstack-vibe.mjs update",
     denies: ["session/install-update"],
   },
   {
-    name: "a grep of the README is not an install.sh update",
+    name: "npx pstack-vibe update is forbidden outright",
     evidence: [...OPENED, ...SIGNED, ...THREE_SPAWNS],
     claim: ["contested no 3/3 three runners"],
-    command: 'grep -n "install.sh update" README.md',
+    command: "npx pstack-vibe update",
+    denies: ["session/install-update"],
+  },
+  {
+    name: "install --force is the same call as update",
+    evidence: [...OPENED, ...SIGNED, ...THREE_SPAWNS],
+    claim: ["contested no 3/3 three runners"],
+    command: "npx pstack-vibe install --force",
+    denies: ["session/install-update"],
+  },
+  {
+    name: "a --force outside the install call is not gated",
+    evidence: [...OPENED, ...SIGNED, ...THREE_SPAWNS],
+    claim: ["contested no 3/3 three runners"],
+    command: "npx pstack-vibe install && echo --force",
+    allow: true,
+  },
+  {
+    name: "a grep of the README is not a pstack-vibe update",
+    evidence: [...OPENED, ...SIGNED, ...THREE_SPAWNS],
+    claim: ["contested no 3/3 three runners"],
+    command: 'grep -n "pstack-vibe update" README.md',
     allow: true,
   },
   {
@@ -401,7 +422,7 @@ test("a row outside its closed set is an internal error, not a deny", () => {
     try {
       stdout = execFileSync(
         "sh",
-        [SCRIPT, "audit", "--evidence", evidencePath, "--claim", evidencePath, "--command", "./scripts/install.sh update"],
+        [SCRIPT, "audit", "--evidence", evidencePath, "--claim", evidencePath, "--command", "./bin/pstack-vibe.mjs update"],
         { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, PLUGIN_ROOT: plugin } },
       );
     } catch (error) {

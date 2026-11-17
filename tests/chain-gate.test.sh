@@ -153,14 +153,14 @@ case $out in
 esac
 echo "chain-gate: PASS (gh run watch denies)"
 
-out=$(gate sess-ok "grep -n \"install.sh update\" README.md") || fail "a README grep was blocked"
+out=$(gate sess-ok "grep -n \"pstack-vibe update\" README.md") || fail "a README grep was blocked"
 [ -z "$out" ] || fail "a README grep emitted output: $out"
-out=$(gate sess-ok "./scripts/install.sh update") || fail "gate exited non-zero on a deny"
+out=$(gate sess-ok "./bin/pstack-vibe.mjs update") || fail "gate exited non-zero on a deny"
 case $out in
   *session/install-update*) ;;
   *) fail "deny does not name session/install-update: $out" ;;
 esac
-echo "chain-gate: PASS (a README grep allows, ./scripts/install.sh update denies)"
+echo "chain-gate: PASS (a README grep allows, ./bin/pstack-vibe.mjs update denies)"
 
 out=$(gate sess-ok "gh pr create --title \"fix: make doctor fail\" --body-file $body") ||
   fail "a scope-less title was blocked"
@@ -277,7 +277,7 @@ for c in "git log --grep='gh pr create'" "gh pr create --help" "gh api repos/o/r
   out=$(gate sess-ok "$c") || fail "a mention of a gated string was blocked: $c"
   [ -z "$out" ] || fail "a mention of a gated string emitted output: $c -> $out"
 done
-out=$(gate sess-thin "grep -n 'install.sh update' README.md") || fail "a README grep was blocked"
+out=$(gate sess-thin "grep -n 'pstack-vibe update' README.md") || fail "a README grep was blocked"
 [ -z "$out" ] || fail "a README grep emitted output: $out"
 echo "chain-gate: PASS (a command that mentions a gated string is not gated)"
 
@@ -295,13 +295,17 @@ for c in "gh run watch 1" "gh pr checks 42 --watch"; do
     *) fail "not audited as a guard call: $c -> $out" ;;
   esac
 done
-for c in "./scripts/install.sh update" "sh scripts/install.sh update"; do
+for c in "./bin/pstack-vibe.mjs update" "node bin/pstack-vibe.mjs update" \
+  "npx pstack-vibe update" "npx -y pstack-vibe update" "npm exec pstack-vibe update" \
+  "pstack-vibe update" "npx pstack-vibe install --force"; do
   out=$(gate sess-ok "$c") || fail "gate exited non-zero on a deny: $c"
   case $out in
     *session/install-update*) ;;
     *) fail "not audited as an install update: $c -> $out" ;;
   esac
 done
+out=$(gate sess-ok "npx pstack-vibe install && echo --force") || fail "gate exited non-zero on a deny"
+[ -z "$out" ] || fail "a --force outside the install call was gated: $out"
 echo "chain-gate: PASS (the anchored arms still catch the real call)"
 
 out=$(gate sess-thin "gh run watch 12345") || fail "gate exited non-zero on a deny"

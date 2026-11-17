@@ -6,7 +6,7 @@ remove it.
 
 ## What the installer writes
 
-`./scripts/install.sh install` writes one directory:
+`npx pstack-vibe install` writes one directory:
 
 - `~/.vibe/plugins/pstack/` (user scope) or `.vibe/plugins/pstack/` (project scope). It
   contains `plugin.json`, the 58 skills, the guide, the hook, the agent profiles, the
@@ -23,7 +23,7 @@ directory.
 - Optionally, an effort-variant `[[models]]` entry in `~/.vibe/config.toml`. Setup shows the
   exact entry and asks for consent before writing it. It never edits the config silently.
 
-`./scripts/install.sh uninstall` removes the plugin directory. `uninstall --purge` also
+`npx pstack-vibe uninstall` removes the plugin directory. `uninstall --purge` also
 removes the model sheet and the `pstack-*.toml` profiles. It does not remove model entries
 that setup added to `config.toml`; delete those by hand if you added them.
 
@@ -91,7 +91,7 @@ mv ~/.vibe/plugins/pstack ~/.vibe/pstack.disabled
 Or remove it:
 
 ```sh
-./scripts/install.sh uninstall
+npx pstack-vibe uninstall
 ```
 
 For a project install, run the same command with `--project` from that repository. Start a
@@ -100,7 +100,7 @@ new session, or run `/reload-plugins`, so Vibe drops the plugin and its hook.
 To remove everything setup wrote, including the model sheet and profiles:
 
 ```sh
-./scripts/install.sh uninstall --purge
+npx pstack-vibe uninstall --purge
 ```
 
 ## Reporting a problem

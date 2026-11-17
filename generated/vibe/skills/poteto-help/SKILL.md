@@ -36,7 +36,7 @@ When the model sheet is missing and it matters, ask whether the user wants to pi
 
 ## Get set up
 
-1. Install with `scripts/install.sh` from a checkout, or copy `generated/vibe` to `~/.vibe/plugins/pstack`. Add `--project` to install to `.vibe/plugins/pstack`.
+1. Install with `npx pstack-vibe install`, or copy `generated/vibe` to `~/.vibe/plugins/pstack`. Add `--project` to install to `.vibe/plugins/pstack`.
 2. Run [`/setup-pstack`](../setup-pstack/SKILL.md). It asks for a reasoning budget, maps a model to each role, and writes a model sheet plus the user-level agent profiles. They apply to new sessions. Then it offers once each to generate a verification skill and a formal verification skill for the project, unless the project already has one.
 3. Start a real task with `/poteto-mode`, a goal, and a check that can pass or fail.
 

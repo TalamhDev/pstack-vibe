@@ -22,9 +22,34 @@ jobs:
       - run: node scripts/generate.mjs --check
       - run: brew install shellcheck
         if: runner.os == 'macOS'
-      - run: shellcheck scripts/*.sh generated/vibe/ai.mistral.vibe/scripts/*.sh
+      - run: shellcheck generated/vibe/ai.mistral.vibe/scripts/*.sh
       - run: npx --yes markdownlint-cli2 "README.md" "NOTICE.md" "SECURITY.md" "CHANGELOG.md" "docs/**/*.md"
       - run: npx --yes github-actionlint
+
+  versions:
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.read.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        run: echo "list=$(jq -c '.vibe.tested' package.json)" >> "$GITHUB_OUTPUT"
+
+  compat:
+    needs: versions
+    strategy:
+      fail-fast: false
+      matrix:
+        vibe: ${{ fromJSON(needs.versions.outputs.list) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v7
+      - run: uv tool install mistral-vibe==${{ matrix.vibe }}
+      - run: node bin/pstack-vibe.mjs verify
 
   drive:
     runs-on: ubuntu-latest

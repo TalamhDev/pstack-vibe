@@ -4,6 +4,10 @@ import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { installPlugin } from "../src/install.mjs";
+import { resolveLayout } from "../src/layout.mjs";
+import { removeTree } from "../src/tree.mjs";
+import { createVibeProbe } from "../src/vibe.mjs";
 import { startMockProvider } from "./mock-provider.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -72,13 +76,13 @@ async function runCase(caseSpec, { plugin, sentinel }) {
     await writeFile(join(home, "config.toml"), configToml(provider.apiBase));
     await writeFile(join(home, "pstack-models.md"), sheet(sentinel));
 
-    const install = await run("sh", [join(ROOT, "scripts/install.sh"), "install"], {
-      VIBE_HOME: home,
-      PLUGIN_SRC: plugin,
+    await installPlugin({
+      layout: resolveLayout({ scope: "user", env: { VIBE_HOME: home }, cwd: ROOT }),
+      source: plugin,
+      force: false,
+      dryRun: false,
+      vibe: createVibeProbe(),
     });
-    if (install.exitCode !== 0) {
-      throw new Error(`install.sh exited ${install.exitCode}: ${install.stderr.trim()}`);
-    }
     if (caseSpec.disableHook) {
       await rm(join(home, "plugins/pstack", HOOK_FILE), { force: true });
     }
@@ -97,7 +101,7 @@ async function runCase(caseSpec, { plugin, sentinel }) {
     : assessRequests({ ...caseSpec, exitCode: session.exitCode }, provider.requests, sentinel);
 
   if (verdict.ok) {
-    await run("sh", [join(ROOT, "scripts/remove-tree.sh"), runDir]);
+    await removeTree(runDir);
     return { ...caseSpec, ...verdict, runDir: null };
   }
   return { ...caseSpec, ...verdict, runDir };

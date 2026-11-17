@@ -19,53 +19,75 @@ tree, the installer, the model sheet, and the agent profiles can all change or b
 commits. Treat any usage as an experiment on a checkout you are willing to throw away, and
 expect rough edges rather than support.
 
-When an initial release is ready, this page will be updated and installations will be
-available through npm and npx. Until then, the only install path is the clone-and-run
-installer below.
+The npm package is not published yet. The install section below leads with the `npx` command
+the first release will use, and names the checkout path that works today.
 
 ## Install
 
-Clone the repository, then run the installer:
-
 ```sh
-git clone https://github.com/telamh/pstack-vibe.git
-cd pstack-vibe
-./scripts/install.sh install
+npx pstack-vibe install
 ```
 
-That copies the generated plugin to `~/.vibe/plugins/pstack` (user scope). The installer is
-POSIX `sh` and needs no runtime dependencies.
+That copies the generated plugin to `~/.vibe/plugins/pstack` (user scope). The package ships
+the prebuilt plugin tree, so there is no build step and no git clone. Name a version to pin
+it, as in `npx pstack-vibe@0.15.42-vibe.1 install`.
+
+Installing needs Node 22 or newer, because the installer and the doctor are Node programs.
+`npx` ships with Node, so a machine that has `npx` has what it needs. The plugin itself does
+not need Node once installed. It is a directory of markdown and shell hook scripts that Vibe
+reads.
 
 Project scope installs into the current repository instead, so the plugin travels with it:
 
 ```sh
-./scripts/install.sh install --project
+npx pstack-vibe install --project
 ```
 
 That writes `.vibe/plugins/pstack` and leaves the user-level install alone. Use project scope
 when a team wants one pinned pstack version per repository.
 
-Other installer commands:
+Other commands:
 
 ```sh
-./scripts/install.sh update      # reinstall over the existing copy
-./scripts/install.sh uninstall   # remove the plugin directory
-./scripts/install.sh doctor      # check Vibe, the manifest, skills, hook, sheet, and profiles
+npx pstack-vibe update      # reinstall over the existing copy
+npx pstack-vibe uninstall   # remove the plugin directory
+npx pstack-vibe doctor      # check Vibe, the manifest, skills, hook, chain, sheet, and profiles
+npx pstack-vibe verify      # install into a temp home, doctor, drive a session, clean up
 ```
 
 `uninstall --purge` also removes the model sheet and the `pstack-*.toml` agent profiles.
 `--dry-run` prints what would be written without writing it.
 
-Release tarballs contain the same repository, including `scripts/install.sh` and the
-prebuilt `generated/vibe/` tree. Unpack one and run `./scripts/install.sh install`; there is
-no build step. If you only have the plugin tree, copy `generated/vibe/` to
-`~/.vibe/plugins/pstack` by hand.
+`verify` answers "does this work here". It builds a throwaway Vibe home, installs into it,
+runs the doctor, drives a real session against a local mock provider to prove the
+session-start hook delivered the model sheet, then removes the home. It never touches your
+real `~/.vibe`. It seeds a fixture model sheet, so it proves the plugin works, not that your
+own sheet is correct. Run `doctor` for that.
+
+### Tested Vibe versions
+
+The installer reads `vibe --version` and refuses to install outside the range this release was
+tested against, naming both the range and the version it found. The range is derived from the
+`vibe.tested` list in `package.json`, and CI runs `verify` against every version in that list,
+so a version cannot be claimed as tested without passing. This release is tested against Vibe
+`>=3.1.2 <3.2.0`.
+
+### From a checkout
+
+Until the first publish, install from a clone:
+
+```sh
+git clone https://github.com/telamh/pstack-vibe.git
+cd pstack-vibe
+npm install
+node bin/pstack-vibe.mjs install
+```
+
+`npx github:telamh/pstack-vibe` also works, but it resolves a git ref, needs git, and is
+slower. Prefer the registry.
 
 Start a new session, or run `/reload-plugins`, after installing. Vibe reads plugins at
 session start.
-
-There is no npm or npx install yet. Those arrive with the initial release, and this section
-will be replaced when they do.
 
 ## Setup
 
@@ -171,26 +193,26 @@ pause list.
 ## Troubleshooting
 
 **The plugin is not found.** Check that `~/.vibe/plugins/pstack/plugin.json` exists and names
-`pstack`. Run `./scripts/install.sh doctor`; it checks the manifest, the skills against
-`skills.manifest`, the hook, the model sheet, the profiles, and the aliases. A project install
-lives at `.vibe/plugins/pstack`, so run the installer from that repository with `--project`.
+`pstack`. Run `npx pstack-vibe doctor`; it checks the manifest, the skills against
+`skills.manifest`, the hook, the chain manifest, the model sheet, the profiles, the aliases,
+and the Vibe version. A project install lives at `.vibe/plugins/pstack`, so pass `--project`.
 
 **Skills do not show up.** Run `/reload-plugins` or start a new session. Most pstack skills
 set `disable-model-invocation: true`, so the `skill` tool does not load them on its own. Type
 the command, or let `/poteto-mode` read the skill by path. A skill that still does not appear
-means the plugin directory is incomplete; reinstall with `./scripts/install.sh update`.
+means the plugin directory is incomplete; reinstall with `npx pstack-vibe update`.
 
 **A model alias is missing.** Vibe rejects an agent profile whose `active_model` is not in
-`~/.vibe/config.toml`, and it does not fall back. Run `./scripts/install.sh doctor` to see
-which alias is missing, add the model entry to the config, or rerun `/pstack:setup-pstack`
-and pick an alias you have. Do not hand-edit a profile to an alias you have not confirmed.
+`~/.vibe/config.toml`, and it does not fall back. Run `npx pstack-vibe doctor` to see which
+alias is missing, add the model entry to the config, or rerun `/pstack:setup-pstack` and pick
+an alias you have. Do not hand-edit a profile to an alias you have not confirmed.
 
 **The session-start hook does not fire.** Check that
 `~/.vibe/plugins/pstack/ai.mistral.vibe/hooks.toml` exists and that
 `ai.mistral.vibe/scripts/session-start.sh` is executable. The hook runs `sh` on that script,
 so a missing file or a bad `$PLUGIN_ROOT` leaves the session without the model sheet. Start a
-new session after fixing it; hooks load at session start. `node scripts/mock-drive.mjs` proves
-the hook fires without an API key, and exits non-zero when it does not.
+new session after fixing it; hooks load at session start. `npx pstack-vibe verify` proves the
+hook fires without an API key, and exits non-zero when it does not.
 
 **A change had no effect.** Start a new session. Model sheets and agent profiles are read
 when a session starts, not while one is running. Run `/reload-plugins` only after changing
@@ -242,8 +264,8 @@ The port is independent and is not endorsed by Lauren Tan, Mistral, or Cursor.
 
 ## Limitations
 
-- **macOS and Linux only.** The installer, hook, and doctor use POSIX `sh` and `awk`. Windows
-  support is a follow-up.
+- **macOS and Linux only.** The installer and doctor are Node and portable, but the
+  session-start hook and the chain recorder are POSIX `sh`. Windows support is a follow-up.
 - **Experimental plugin format.** The port targets the Vibe 3.1.2 plugin format: `plugin.json`,
   `skills/`, and `ai.mistral.vibe/{hooks.toml,agents/*.toml}`. The format can change, and a
   change can break the generated tree.

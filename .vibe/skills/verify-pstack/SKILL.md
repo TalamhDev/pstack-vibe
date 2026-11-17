@@ -7,7 +7,7 @@ user-invocable: false
 # Verify pstack
 
 pstack is a Vibe CLI plugin, not a server. There is no port to open and no page to
-load. The user-facing surface is three things: the installer (`scripts/install.sh`),
+load. The user-facing surface is three things: the installer (`bin/pstack-vibe.mjs`),
 the plugin tree it copies into a Vibe home, and what a real `vibe` session does with
 that tree — the session-start hook injecting the model sheet, and `/pstack:*` skills
 loading and running.
@@ -38,7 +38,7 @@ That does four things and prints the run directory:
    state: the aliases must exist for Vibe to resolve an agent profile.
 3. Runs `npm install` if `node_modules` is missing. A fresh clone has none, and
    `npm run check` and `npm test` both fail with `ERR_MODULE_NOT_FOUND` without it.
-4. Runs `./scripts/install.sh install` with `VIBE_HOME` pointed at the run home.
+4. Runs `node bin/pstack-vibe.mjs install` with `VIBE_HOME` pointed at the run home.
 
 Ready means the doctor passes, not that the copy finished. Go straight to Doctor.
 
@@ -51,17 +51,20 @@ keeps `$RUN_DIR/artifacts`.
 .vibe/skills/verify-pstack/control-pstack doctor
 ```
 
-One read-only check that answers "is this instance worth driving?". It prints seven
-`PASS` lines and exits 0:
+One read-only check that answers "is this instance worth driving?". It prints one
+`PASS` line per check and exits 0:
 
 ```
 PASS  vibe is on PATH: vibe 3.1.2
 PASS  plugin manifest at <home>/plugins/pstack/plugin.json names pstack
 PASS  skills: 58 SKILL.md files match skills.manifest
 PASS  hook file at <home>/plugins/pstack/ai.mistral.vibe/hooks.toml
+PASS  chain: chain.tsv is installed and names only installed playbooks
+PASS  chain: <home>/plugin-data/pstack is writable
 PASS  model sheet at <home>/pstack-models.md
 PASS  agent profiles named in the sheet are installed
 PASS  model aliases recorded in the sheet exist in <home>/config.toml
+PASS  vibe 3.1.2 is within the tested range >=3.1.2 <3.2.0
 ```
 
 Any `FAIL` line means the instance is not worth driving. Fix the cause, do not drive
@@ -105,7 +108,7 @@ model sheet, the hook did not fire at all.
 Capture the action and the resulting state, not just the last line.
 
 - **Installer and doctor proof** is the command, its stdout, and its exit code. Keep
-  the full seven-line doctor block; a single `PASS` proves nothing.
+  the full doctor block; a single `PASS` proves nothing.
 - **Session proof** is `stdout.txt` plus `exit_code.txt` plus `export/export.json`,
   which records the effective config, token usage, and any warnings. Read the warnings
   array: a config issue there means Vibe rejected something the doctor cannot see.
@@ -131,7 +134,7 @@ broken attempt does not leave a home behind that the next run mistakes for its o
 
 Vibe pins read-only plugin snapshots under `$VIBE_HOME/logs/session/plugins/`, so a
 plain `rm -rf` leaves the home behind with `Permission denied`. `cleanup` delegates to
-`scripts/remove-tree.sh`, which chmods the tree writable first and fails loudly if the
+`src/tree.mjs`, which chmods the tree writable first and fails loudly if the
 home survives.
 
 ## Helpers
@@ -150,15 +153,15 @@ prints the run directory and whether it is launched. Set `RUN_ID` to name a run,
   proves that sheet instead.
 - **A driven session writes read-only snapshots into the home.** Vibe pins each plugin
   under `$VIBE_HOME/logs/session/plugins/` with no write bit, so `rm -rf` on the home
-  fails with `Permission denied`. Chmod before removing; `scripts/remove-tree.sh` does,
+  fails with `Permission denied`. Chmod before removing; `src/tree.mjs` does,
   and `cleanup` calls it.
 - **`npm install` first.** A fresh clone has no `node_modules`, so `npm run check` and
   `npm test` fail with `ERR_MODULE_NOT_FOUND`. `launch` handles it; a bare `npm test`
   does not.
 - **The doctor compares skills against `skills.manifest`.** Adding or removing a skill
-  means regenerating the tree, not editing `scripts/doctor.sh`. A skill directory added
+  means regenerating the tree, not editing `src/doctor.mjs`. A skill directory added
   by hand to an install fails check 3 until the manifest matches.
-- **`--project` writes into the current directory.** `./scripts/install.sh install
+- **`--project` writes into the current directory.** `node bin/pstack-vibe.mjs install
   --project` creates `./.vibe/plugins/pstack` wherever you stand. Run it from a scratch
   directory, or you will dirty this repo.
 - **The API key comes from the OS keychain**, not from the run home, so a fresh

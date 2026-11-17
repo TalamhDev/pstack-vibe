@@ -17,10 +17,10 @@ and agent profiles.
 
 ## How to get to it (user POV)
 
-- Run `./scripts/install.sh install` from the repository root.
-- Run `./scripts/install.sh install --project` from the repository you want to pin.
-- Run `./scripts/install.sh update`.
-- Run `./scripts/install.sh uninstall`, adding `--purge` to remove the sheet and
+- Run `node bin/pstack-vibe.mjs install` from the repository root.
+- Run `node bin/pstack-vibe.mjs install --project` from the repository you want to pin.
+- Run `node bin/pstack-vibe.mjs update`.
+- Run `node bin/pstack-vibe.mjs uninstall`, adding `--purge` to remove the sheet and
   profiles too.
 - Add `--dry-run` to any of the above.
 
@@ -31,28 +31,28 @@ Preconditions:
 - A launched run: `control-pstack launch` has created `$RUN_DIR/home`.
 - `$RUN_DIR/home/plugins/pstack` exists from that launch.
 
-- **Install at user scope.** Run `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh install`.
+- **Install at user scope.** Run `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs install`.
   Stdout reads `install: pstack installed at $RUN_DIR/home/plugins/pstack (user scope).`
   and exit code is `0`. `$RUN_DIR/home/plugins/pstack/plugin.json` exists and names
   `pstack`.
-- **Reinstall over it.** Run `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh update`.
+- **Reinstall over it.** Run `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs update`.
   Stdout reads `update: pstack updated at ...` and exit code is `0`. The directory is
   replaced, not merged.
-- **Preview a write.** Run `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh install
+- **Preview a write.** Run `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs install
   --dry-run`. Stdout lines start with `dry-run:` and end with
   `install: dry run; nothing written`. The plugin directory's mtime is unchanged.
 - **Refuse a foreign directory.** Create `$RUN_DIR/home/plugins/pstack` containing a
   `plugin.json` that does not name pstack, then run
-  `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh install`. Exit code is `1` and stderr
+  `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs install`. Exit code is `1` and stderr
   reads `exists and is not a pstack plugin; rerun with --force to replace it`. The
   directory is untouched.
 - **Install at project scope.** From a scratch directory, run
-  `<repo>/scripts/install.sh install --project`. `./.vibe/plugins/pstack/plugin.json`
+  `node <repo>/bin/pstack-vibe.mjs install --project`. `./.vibe/plugins/pstack/plugin.json`
   appears in that scratch directory and `$RUN_DIR/home/plugins/pstack` is unchanged.
-- **Uninstall.** Run `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh uninstall`. Stdout
+- **Uninstall.** Run `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs uninstall`. Stdout
   reads `uninstall: removed ...`. The plugin directory is gone and
   `$RUN_DIR/home/pstack-models.md` still exists.
-- **Purge.** Relaunch, then run `VIBE_HOME=$RUN_DIR/home ./scripts/install.sh uninstall
+- **Purge.** Relaunch, then run `VIBE_HOME=$RUN_DIR/home node bin/pstack-vibe.mjs uninstall
   --purge`. The plugin directory, `$RUN_DIR/home/pstack-models.md`, and
   `$RUN_DIR/home/agents/pstack-*.toml` are all gone.
 - **Proof.** Keep the stdout and exit code of each command under
@@ -61,7 +61,7 @@ Preconditions:
 
 ## Gotchas
 
-- `--project` writes into the **current** directory, not the repository the script
+- `--project` writes into the **current** directory, not the repository the CLI
   lives in. Run it from a scratch directory or you will dirty this repo.
 - `install` and `update` differ only in `--force`; `update` on a foreign directory
   replaces it without asking.
@@ -70,5 +70,5 @@ Preconditions:
   expected, not a bug.
 - The installer prints `Run /reload or start a new session.` A running session does not
   pick up the change.
-- `--dry-run` still validates arguments and the source tree, so a dry run can fail
-  where a real run would.
+- `--dry-run` still runs the Vibe version gate and validates the source tree, so a dry
+  run can fail where a real run would.
