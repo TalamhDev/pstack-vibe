@@ -37,13 +37,13 @@ cmd_launch() {
     ( cd "$ROOT" && npm install )
   fi
 
-  ( cd "$ROOT" && VIBE_HOME="$VHOME" ./scripts/install.sh install )
+  ( cd "$ROOT" && VIBE_HOME="$VHOME" node bin/pstack-vibe.mjs install )
   printf 'run dir: %s\n' "$RUN_DIR"
 }
 
 cmd_doctor() {
   [ -d "$VHOME" ] || die "no run at $RUN_DIR; run 'control-pstack launch' first"
-  ( cd "$ROOT" && VIBE_HOME="$VHOME" ./scripts/install.sh doctor )
+  ( cd "$ROOT" && VIBE_HOME="$VHOME" node bin/pstack-vibe.mjs doctor )
 }
 
 # Write a sheet into the run home whose security-review role names $1, so a
@@ -94,8 +94,8 @@ cmd_cleanup() {
     return 0
   fi
   status=0
-  sh "$ROOT/scripts/remove-tree.sh" "$VHOME" || status=1
-  sh "$ROOT/scripts/remove-tree.sh" "$SCRATCH" || status=1
+  ( cd "$ROOT" && node --input-type=module -e 'import { removeTree } from "./src/tree.mjs"; await removeTree(process.argv[1]);' "$VHOME" ) || status=1
+  ( cd "$ROOT" && node --input-type=module -e 'import { removeTree } from "./src/tree.mjs"; await removeTree(process.argv[1]);' "$SCRATCH" ) || status=1
   [ "$status" -eq 0 ] || return 1
   printf 'removed %s and %s; artifacts kept at %s\n' "$VHOME" "$SCRATCH" "$ART"
 }

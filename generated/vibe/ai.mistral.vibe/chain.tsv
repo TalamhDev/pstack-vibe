@@ -31,7 +31,7 @@ opening-a-pr	body-verification	ship	always	body	require	^## Verification$	the bo
 opening-a-pr	body-tradeoffs	ship	optional	body	require	^## Tradeoffs$	the body has no `## Tradeoffs` heading
 opening-a-pr	not-draft	ship	always	command	forbid	--draft	open the PR ready, never as a draft
 opening-a-pr	no-ci-watch	guard	no-babysit	command	forbid	(gh|origin) (pr checks|run watch)	post the URL, do not watch CI
-session	install-update	guard	always	command	forbid	(^|[;&|] )(sh )?\.?/?scripts/install\.sh update	install.sh update needs the user's answer first
+session	install-update	guard	always	command	forbid	(^|[;&|] )(npx( -y)? |npm exec )?(node )?([^ ]*/)?pstack-vibe(\.mjs)? (update|install[^;&|]*--force)	pstack-vibe update needs the user's answer first
 # unchecked	first-message-goal	the restatement is assistant text, not a tool call
 # unchecked	fix-round-fresh	needs ordering; the evidence set records no order
 # unchecked	throughput-checkpoint	the checkpoint is reply text, not a tool call

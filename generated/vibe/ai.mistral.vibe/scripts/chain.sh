@@ -98,7 +98,7 @@ classify() {
     printf 'ship\n'
   elif printf '%s\n' "$1" | grep -Eq '(^|[;&|] )(gh|origin) (pr checks[^;&|]*--watch|run watch)'; then
     printf 'guard\n'
-  elif printf '%s\n' "$1" | grep -Eq '(^|[;&|] )(sh )?\.?/?scripts/install\.sh update'; then
+  elif printf '%s\n' "$1" | grep -Eq '(^|[;&|] )(npx( -y)? |npm exec )?(node )?([^ ]*/)?pstack-vibe(\.mjs)? (update|install[^;&|]*--force)'; then
     printf 'guard\n'
   else
     printf 'none\n'

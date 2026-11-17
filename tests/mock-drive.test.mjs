@@ -6,12 +6,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { assessRequests } from "../scripts/mock-drive.mjs";
+import { removeTree } from "../src/tree.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const DRIVE = join(ROOT, "scripts/mock-drive.mjs");
 const GENERATED = join(ROOT, "generated/vibe");
-const REMOVE_TREE = join(ROOT, "scripts/remove-tree.sh");
 
 const SENTINEL = "pstack-sentinel-0123456789abcdef";
 const PROMPT = "Reply with the single word: ok";
@@ -91,9 +91,9 @@ test("the drive fails when the installed plugin has no hook", { skip: VIBE_SKIP 
     assert.match(result.stdout, /^FAIL {2}hook-on:/m);
   } finally {
     for (const dir of keptDirs(result?.stdout ?? "")) {
-      execFileSync("sh", [REMOVE_TREE, dir]);
+      await removeTree(dir);
     }
-    execFileSync("sh", [REMOVE_TREE, work]);
+    await removeTree(work);
   }
 });
 
