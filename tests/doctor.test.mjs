@@ -16,6 +16,10 @@ const GENERATED = join(ROOT, "generated/vibe");
 const probeOf = (text) => async () => ({ kind: "ok", version: parseVibeVersion(text) });
 const supported = probeOf("vibe 3.1.2");
 
+/** chmod cannot deny write access to a directory on Windows, so the fixture cannot be built there. */
+const READ_ONLY_DIR =
+  process.platform === "win32" ? "chmod cannot make a directory read-only on Windows" : false;
+
 const PASSING_SHEET = [
   "# pstack model configuration",
   "# deepseek: deepseek-flash",
@@ -270,7 +274,7 @@ test("a chain manifest naming a playbook that is not installed fails", async () 
   }
 });
 
-test("a read-only plugin data directory fails", async () => {
+test("a read-only plugin data directory fails", { skip: READ_ONLY_DIR }, async () => {
   const home = await fixture();
   try {
     mkdirSync(home.layout.dataDir, { recursive: true });

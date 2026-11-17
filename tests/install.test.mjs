@@ -27,6 +27,10 @@ const supported = probeOf("vibe 3.1.2");
 const unsupported = probeOf("vibe 3.9.9");
 const absent = async () => ({ kind: "absent" });
 
+/** The fixture is a shell script, which Windows cannot execute; the compat job drives the real CLI there. */
+const SHELL_FIXTURE =
+  process.platform === "win32" ? "a shell-script fixture is not executable on Windows" : false;
+
 function scratch() {
   return mkdtempSync(join(tmpdir(), "pstack-install-"));
 }
@@ -293,7 +297,7 @@ test("an interrupted install is swept by the next one", async () => {
   }
 });
 
-test("the CLI refuses to install against an untested Vibe on PATH", async () => {
+test("the CLI refuses to install against an untested Vibe on PATH", { skip: SHELL_FIXTURE }, async () => {
   const work = scratch();
   try {
     const bin = join(work, "bin");
@@ -314,7 +318,7 @@ test("the CLI refuses to install against an untested Vibe on PATH", async () => 
   }
 });
 
-test("the CLI installs and uninstalls against a tested Vibe on PATH", async () => {
+test("the CLI installs and uninstalls against a tested Vibe on PATH", { skip: SHELL_FIXTURE }, async () => {
   const work = scratch();
   try {
     const bin = join(work, "bin");

@@ -22,6 +22,12 @@ const rules = [
   { id: "regex", kind: "regex", find: "claude-opus-5-5-[a-z-]+", replace: "pstack-deepseek" },
 ];
 
+/** Windows has no POSIX mode bits; chmod there only toggles the read-only attribute. */
+function assertMode(path, expected, label) {
+  if (process.platform === "win32") return;
+  assert.equal(statSync(path).mode & 0o777, expected, label);
+}
+
 async function generateRealPlugin() {
   const out = mkdtempSync(join(tmpdir(), "pstack-real-"));
   await generatePlugin({
@@ -184,7 +190,7 @@ test("the chain manifest and every vibe script are generated with their modes", 
 
   const manifest = join(out, "ai.mistral.vibe/chain.tsv");
   assert.ok(existsSync(manifest), "chain.tsv is not generated");
-  assert.equal(statSync(manifest).mode & 0o777, 0o644);
+  assertMode(manifest, 0o644, "chain.tsv is not 0644");
   assert.equal(
     readFileSync(manifest, "utf8"),
     readFileSync(join(root, "adapters/vibe/chain.tsv"), "utf8"),
@@ -196,7 +202,7 @@ test("the chain manifest and every vibe script are generated with their modes", 
   for (const name of names) {
     const target = join(out, "ai.mistral.vibe/scripts", name);
     assert.ok(existsSync(target), `${name} is not generated`);
-    assert.equal(statSync(target).mode & 0o777, 0o644, `${name} is not 0644`);
+    assertMode(target, 0o644, `${name} is not 0644`);
     assert.equal(readFileSync(target, "utf8"), readFileSync(join(sourceDir, name), "utf8"));
   }
 });
