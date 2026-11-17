@@ -5,6 +5,11 @@
   "type": "module",
   "description": "pstack for the Mistral Vibe CLI",
   "license": "MIT",
+  "vibe": {
+    "tested": [
+      "3.1.2"
+    ]
+  },
   "scripts": {
     "generate": "node scripts/generate.mjs",
     "check": "node scripts/generate.mjs --check",
