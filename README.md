@@ -32,6 +32,11 @@ That copies the generated plugin to `~/.vibe/plugins/pstack` (user scope). The p
 the prebuilt plugin tree, so there is no build step and no git clone. Name a version to pin
 it, as in `npx pstack-vibe@0.15.42-vibe.1 install`.
 
+Installing needs Node 22 or newer, because the installer and the doctor are Node programs.
+`npx` ships with Node, so a machine that has `npx` has what it needs. The plugin itself does
+not need Node once installed. It is a directory of markdown and shell hook scripts that Vibe
+reads.
+
 Project scope installs into the current repository instead, so the plugin travels with it:
 
 ```sh
