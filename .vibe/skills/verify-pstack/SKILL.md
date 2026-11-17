@@ -79,7 +79,8 @@ Runs `vibe -p "<prompt>" --trust --output-dir <artifacts>/drive-<n>/export` from
 `stdout.txt`, `stderr.txt`, `exit_code.txt`, and the export directory beside it.
 
 Driving from the scratch cwd matters. The session-start hook resolves the sheet from
-the session's cwd first, so a sheet planted there is the one the model sees.
+the session's cwd first, so a sheet planted there would win. `sheet` plants into the
+run home instead, which the hook reaches through `VIBE_HOME`.
 
 `--trust` is required. `vibe -p` never prompts for trust, so without it the folder is
 untrusted and project-local config is skipped.
@@ -94,9 +95,10 @@ cannot come from `~/.vibe`:
   "Without reading any file, state the profile the pstack model sheet assigns to the 'security review' role. Answer with just the profile name."
 ```
 
-A correct run prints `pstack-glm` on stdout with exit 0. If it prints `pstack-ml4`,
-the hook read the real `~/.vibe/pstack-models.md` instead of the planted one. If it
-says it has no model sheet, the hook did not fire at all.
+A correct run prints `pstack-glm` on stdout with exit 0, which proves the hook honored
+`VIBE_HOME` rather than the real `~/.vibe`. If it prints `pstack-ml4`, the hook read
+the real `~/.vibe/pstack-models.md` instead of the planted one. If it says it has no
+model sheet, the hook did not fire at all.
 
 ## Evidence
 
@@ -135,15 +137,16 @@ tree writable first and fails loudly if the home survives.
 
 `control-pstack` is the only helper. It is executable and takes
 `launch | doctor | drive | sheet | cleanup | status`. `sheet <profile>` plants a
-scratch sheet naming that profile for the security-review role. `status` prints the
-run directory and whether it is launched. Set `RUN_ID` to name a run, or `RUN_DIR` to
-place it, when you want two runs side by side — they do not share state.
+sheet in the run home naming that profile for the security-review role. `status`
+prints the run directory and whether it is launched. Set `RUN_ID` to name a run, or
+`RUN_DIR` to place it, when you want two runs side by side — they do not share state.
 
 ## Gotchas
 
-- **The hook reads `$HOME/.vibe`, not `$VIBE_HOME`.** `session-start.sh` falls back to
-  `$HOME/.vibe/pstack-models.md`, so overriding `VIBE_HOME` alone does not isolate the
-  sheet. Plant a scratch sheet, or the run silently proves the real home's sheet.
+- **A project sheet shadows the run home's sheet.** `session-start.sh` checks the
+  session's cwd and `./.vibe` before `$VIBE_HOME`, so a `.vibe/pstack-models.md` in the
+  scratch cwd wins over the planted one. Keep the scratch cwd free of one, or the run
+  proves that sheet instead.
 - **A driven session writes read-only snapshots into the home.** Vibe pins each plugin
   under `$VIBE_HOME/logs/session/plugins/` with no write bit, so `rm -rf` on the home
   fails with `Permission denied`. Chmod before removing; `cleanup` does.

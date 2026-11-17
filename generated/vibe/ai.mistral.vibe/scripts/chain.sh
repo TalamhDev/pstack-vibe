@@ -10,6 +10,10 @@ plugin_data() {
     printf '%s\n' "$PLUGIN_DATA"
     return 0
   fi
+  if [ -n "${VIBE_HOME:-}" ]; then
+    printf '%s\n' "$VIBE_HOME/plugin-data/pstack"
+    return 0
+  fi
   printf '%s\n' "${HOME:-.}/.vibe/plugin-data/pstack"
 }
 
