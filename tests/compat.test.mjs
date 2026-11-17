@@ -117,8 +117,18 @@ test("the probe reports failed for a command that exits non-zero", async () => {
 });
 
 test("the probe reports unparseable for a command that prints no version", async () => {
-  const probe = createVibeProbe({ command: "echo" });
-  assert.deepEqual(await probe(), { kind: "unparseable", text: "--version" });
+  const bin = mkdtempSync(join(tmpdir(), "pstack-probe-"));
+  const command = join(bin, "vibe");
+  writeFileSync(command, "#!/bin/sh\necho 'vibe nightly'\n");
+  chmodSync(command, 0o755);
+  try {
+    assert.deepEqual(await createVibeProbe({ command })(), {
+      kind: "unparseable",
+      text: "vibe nightly",
+    });
+  } finally {
+    rmSync(bin, { recursive: true, force: true });
+  }
 });
 
 test("the probe reports ok for a command that prints a version", async () => {
