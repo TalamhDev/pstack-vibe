@@ -7,7 +7,7 @@ script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 
 # Vibe runs plugin hooks from the plugin's pinned copy, so the session folder
 # arrives in the payload's `cwd`. Read it when stdin is a pipe, then fall back
-# to the current directory and the user-level sheet for a direct invocation.
+# to the current directory and the Vibe home sheet for a direct invocation.
 payload=""
 if [ ! -t 0 ]; then
   payload="$(cat)"
@@ -23,13 +23,21 @@ if [ -n "$payload" ]; then
   session="$(printf '%s\n' "$payload" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
 fi
 
+# Vibe keeps user-level config under $VIBE_HOME, which defaults to ~/.vibe.
+vibe_home=""
+if [ -n "${VIBE_HOME:-}" ]; then
+  vibe_home=$VIBE_HOME
+elif [ -n "${HOME:-}" ]; then
+  vibe_home="$HOME/.vibe"
+fi
+
 sheet=""
 if [ -n "$cwd" ] && [ -f "$cwd/.vibe/pstack-models.md" ]; then
   sheet="$cwd/.vibe/pstack-models.md"
 elif [ -f "./.vibe/pstack-models.md" ]; then
   sheet="./.vibe/pstack-models.md"
-elif [ -n "${HOME:-}" ] && [ -f "$HOME/.vibe/pstack-models.md" ]; then
-  sheet="$HOME/.vibe/pstack-models.md"
+elif [ -n "$vibe_home" ] && [ -f "$vibe_home/pstack-models.md" ]; then
+  sheet="$vibe_home/pstack-models.md"
 fi
 
 root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
@@ -38,7 +46,7 @@ root="${PLUGIN_ROOT:-$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)}"
 # session that never opened one records nothing.
 run_dir=""
 if [ -n "$session" ]; then
-  data="${PLUGIN_DATA:-${HOME:-.}/.vibe/plugin-data/pstack}"
+  data="${PLUGIN_DATA:-${vibe_home:-${HOME:-.}/.vibe}/plugin-data/pstack}"
   run_dir="$data/runs/$session"
   if ! mkdir -p "$run_dir" 2>/dev/null || ! : > "$run_dir/ready" 2>/dev/null; then
     run_dir=""

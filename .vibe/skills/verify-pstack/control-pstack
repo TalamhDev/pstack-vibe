@@ -46,12 +46,12 @@ cmd_doctor() {
   ( cd "$ROOT" && VIBE_HOME="$VHOME" ./scripts/install.sh doctor )
 }
 
-# Write a scratch sheet whose security-review role names $1, so a session answer
-# proves the hook read THIS sheet rather than the real ~/.vibe one.
+# Write a sheet into the run home whose security-review role names $1, so a
+# session answer proves the hook read THIS sheet rather than the real ~/.vibe one.
 cmd_sheet() {
   [ $# -ge 1 ] || die "usage: control-pstack sheet <profile>"
   [ -d "$SCRATCH" ] || die "no run at $RUN_DIR; run 'control-pstack launch' first"
-  mkdir -p "$SCRATCH/.vibe"
+  mkdir -p "$VHOME"
   {
     printf '# pstack model configuration\n'
     printf '# defaults: 2\n'
@@ -61,8 +61,8 @@ cmd_sheet() {
     printf '# glm: glm-5-3\n'
     printf '# ml4: ml4\n'
     printf 'security review: %s\n' "$1"
-  } > "$SCRATCH/.vibe/pstack-models.md"
-  printf 'planted %s/.vibe/pstack-models.md with security review: %s\n' "$SCRATCH" "$1"
+  } > "$VHOME/pstack-models.md"
+  printf 'planted %s/pstack-models.md with security review: %s\n' "$VHOME" "$1"
 }
 
 cmd_drive() {

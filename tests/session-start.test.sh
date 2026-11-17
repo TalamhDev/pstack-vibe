@@ -1,6 +1,7 @@
 #!/bin/sh
 # tests/session-start.test.sh
 set -eu
+unset VIBE_HOME
 root="$(cd "$(dirname "$0")/.." && pwd)"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -92,5 +93,28 @@ if [ ! -f "$tmp/data/runs/sess-run/ready" ]; then
   exit 1
 fi
 echo "session-start: PASS (names the run directory and marks it ready)"
+
+mkdir -p "$tmp/vibe-home" "$tmp/other-home/.vibe"
+printf 'feature, refactoring: pstack-vibe-home\n' > "$tmp/vibe-home/pstack-models.md"
+printf 'feature, refactoring: pstack-other-home\n' > "$tmp/other-home/.vibe/pstack-models.md"
+(cd "$tmp/empty-project" && VIBE_HOME="$tmp/vibe-home" HOME="$tmp/other-home" \
+  PLUGIN_ROOT="$root/generated/vibe" sh "$script" < /dev/null > "$tmp/vibe-home.json")
+check_context "$tmp/vibe-home.json" "pstack-vibe-home"
+if grep -q "pstack-other-home" "$tmp/vibe-home.json"; then
+  echo "session-start: FAIL (VIBE_HOME sheet did not win over the HOME sheet)" >&2
+  exit 1
+fi
+echo "session-start: PASS (VIBE_HOME sheet wins over the HOME sheet)"
+
+mkdir -p "$tmp/vibe-empty" "$tmp/fallback-home/.vibe"
+printf 'feature, refactoring: pstack-fallback-home\n' > "$tmp/fallback-home/.vibe/pstack-models.md"
+(cd "$tmp/empty-project" && VIBE_HOME="$tmp/vibe-empty" HOME="$tmp/fallback-home" \
+  PLUGIN_ROOT="$root/generated/vibe" sh "$script" < /dev/null > "$tmp/fallback.json")
+check_context "$tmp/fallback.json" "/pstack:setup-pstack"
+if grep -q "pstack-fallback-home" "$tmp/fallback.json"; then
+  echo "session-start: FAIL (VIBE_HOME with no sheet fell back to the HOME sheet)" >&2
+  exit 1
+fi
+echo "session-start: PASS (VIBE_HOME with no sheet does not fall back to the HOME sheet)"
 
 echo "session-start: PASS"
