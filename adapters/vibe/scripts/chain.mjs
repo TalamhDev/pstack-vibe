@@ -1,7 +1,7 @@
-import { appendFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
-import { isatty } from "node:tty";
+import { isFile, readPayload, stringField } from "./hook-payload.mjs";
 
 /** @typedef {"none" | "ship" | "guard"} Mode */
 /** @typedef {"ship" | "guard"} Scope */
@@ -39,33 +39,6 @@ import { isatty } from "node:tty";
 /** A malformed manifest is an internal error, never a decision. */
 class ChainError extends Error {}
 
-// --- payload boundary -------------------------------------------------------
-
-function readPayload() {
-  // `isatty` rather than `process.stdin.isTTY`: touching the stdin stream puts
-  // fd 0 into non-blocking mode, and the read below then races the writer.
-  if (isatty(0)) return null;
-  let text;
-  try {
-    text = readFileSync(0, "utf8");
-  } catch {
-    return null;
-  }
-  try {
-    const value = JSON.parse(text);
-    return value !== null && typeof value === "object" ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function stringField(object, key) {
-  if (object === null || typeof object !== "object") return "";
-  const value = object[key];
-  return typeof value === "string" ? value : "";
-}
-
-/** A subagent's calls fold into its parent's run. */
 function rootSession(payload) {
   const parent = stringField(payload, "parent_session_id");
   return parent === "" ? stringField(payload, "session_id") : parent;
@@ -86,16 +59,7 @@ function manifestPath(env) {
   return join(import.meta.dirname, "..", "chain.tsv");
 }
 
-function isFile(path) {
-  try {
-    return statSync(path).isFile();
-  } catch {
-    return false;
-  }
-}
-
-/** awk's `getline` loop: no trailing empty line, and a CRLF file loses its CR. */
-function lines(text) {
+function evidenceLines(text) {
   const parts = text.split(/\r?\n/);
   if (parts.length > 0 && parts[parts.length - 1] === "") parts.pop();
   return parts;
@@ -104,7 +68,7 @@ function lines(text) {
 function readLines(path) {
   if (path === "") return [];
   try {
-    return lines(readFileSync(path, "utf8"));
+    return evidenceLines(readFileSync(path, "utf8"));
   } catch {
     return [];
   }
@@ -118,13 +82,11 @@ function readManifest(env) {
   }
 }
 
-// --- classify ---------------------------------------------------------------
-
 /**
  * Every arm is anchored at a command boundary, so a command that merely mentions
  * one of these strings (`git log --grep='gh pr create'`) is not gated. The `m`
- * flag is load-bearing: `grep -E` is line-oriented, so `^` matches after every
- * newline, and without it a multi-line command escapes on its second line.
+ * flag is load-bearing: without it `^` matches only at index 0, so a multi-line
+ * command escapes on its second line.
  */
 const ARMS = [
   {
@@ -162,11 +124,8 @@ export function classify(command) {
   return ARMS.find((arm) => arm.matches(command))?.mode ?? "none";
 }
 
-// --- evidence ---------------------------------------------------------------
-
 const FLAT_LIMIT = 1024;
 
-/** `flat` caps each field so a spawn's multi-kilobyte message never reaches the file. */
 function flat(value) {
   return value.replace(/[\t\r\n]/g, " ").slice(0, FLAT_LIMIT);
 }
@@ -201,8 +160,6 @@ export function evidenceLine(payload) {
   return `${tool}${EVIDENCE_FIELDS[tool](payload.tool_input)}`;
 }
 
-// --- parse / compile --------------------------------------------------------
-
 const COLUMNS = ["playbook", "step", "scope", "when", "field", "kind", "match", "reason"];
 
 const SCOPE = {
@@ -226,8 +183,7 @@ const FIELD = {
   command: (snap) => [snap.command],
 };
 
-/** The value is "a hit fails this row", so the closed set and its meaning are one object. */
-const KIND = { require: false, forbid: true };
+const FAILS_ON_HIT = { require: false, forbid: true };
 
 function closed(registry, what, value) {
   if (!Object.hasOwn(registry, value)) {
@@ -252,7 +208,7 @@ function compileRow(cells, columns) {
     scope: closed(SCOPE, "scope", cell("scope")),
     when: closed(WHEN, "when", cell("when")),
     field: closed(FIELD, "field", cell("field")),
-    kind: closed(KIND, "kind", cell("kind")),
+    kind: closed(FAILS_ON_HIT, "kind", cell("kind")),
     match: compileMatch(cell("match")),
     reason: cell("reason"),
   };
@@ -268,7 +224,7 @@ function compileRow(cells, columns) {
 export function parseChain(text) {
   const rows = [];
   let columns = null;
-  for (const line of lines(text)) {
+  for (const line of evidenceLines(text)) {
     if (line.startsWith("#") || /^\s*$/.test(line)) continue;
     const cells = line.split("\t");
     if (columns === null) {
@@ -289,17 +245,12 @@ export function parseChain(text) {
   return rows;
 }
 
-// --- snapshot ---------------------------------------------------------------
-
 const SPAWN = /^agents\.spawn\t/;
 const ARCHITECT_SPAWN = /name=architect-/;
 const READ_FILE = /^file_system\.read_file\t/;
 const PLAYBOOK = /playbooks\/[A-Za-z0-9._-]+\.md/g;
 
 /**
- * awk's `flag_value`: the first occurrence of the flag, an optional `=`, then a
- * quoted or bare value.
- *
  * @param {string} command
  * @param {string} flag
  * @returns {string}
@@ -327,7 +278,7 @@ export function resolveBodyFile(value, cwd) {
 
 function readBody(path) {
   try {
-    return lines(readFileSync(path, "utf8"));
+    return evidenceLines(readFileSync(path, "utf8"));
   } catch {
     return null;
   }
@@ -407,8 +358,6 @@ export function snapshot({ mode, evidence, claim, command, cwd }) {
   };
 }
 
-// --- audit ------------------------------------------------------------------
-
 function bodyFileFailure(rows, snap) {
   if (snap.mode !== "ship" || snap.bodyFile === "" || snap.bodyOk) return null;
   const row = rows.find((entry) => entry.playbook === "opening-a-pr" && entry.step === "body-file");
@@ -432,7 +381,7 @@ export function audit(rows, snap) {
     const lines = FIELD[row.field](snap);
     if (lines === null) continue;
     const hit = lines.some((line) => row.match.test(line));
-    if (KIND[row.kind] === hit) failures.push(`${row.playbook}/${row.step}: ${row.reason}`);
+    if (FAILS_ON_HIT[row.kind] === hit) failures.push(`${row.playbook}/${row.step}: ${row.reason}`);
   }
   const bodyFailure = bodyFileFailure(rows, snap);
   if (bodyFailure !== null) failures.push(bodyFailure);
@@ -453,8 +402,6 @@ function auditRun(evidencePath, claimPath, command, cwd) {
     }),
   );
 }
-
-// --- subcommands ------------------------------------------------------------
 
 function arm() {
   const payload = readPayload();
@@ -543,8 +490,6 @@ function auditCommand(argv) {
   for (const failure of failures) process.stdout.write(`${failure}\n`);
   return failures.length === 0 ? 0 : 1;
 }
-
-// --- main -------------------------------------------------------------------
 
 function main(argv) {
   const [command, ...rest] = argv;

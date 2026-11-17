@@ -1,7 +1,5 @@
-// tests/chain-gate.test.mjs
-//
 // The gate as behavior: every case runs the real `chain.mjs gate` against real
-// files, exactly as tests/chain-gate.test.sh did through `sh`.
+// files.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";

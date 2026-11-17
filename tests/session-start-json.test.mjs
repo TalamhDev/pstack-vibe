@@ -1,32 +1,15 @@
-// tests/session-start-json.test.mjs
+// Vibe fails a session_start hook open. A hook that emits invalid JSON is
+// dropped with a warning, so the session silently loses the model sheet and the
+// model never learns the role table. Nothing crashes, and the transcript looks
+// normal.
 //
-// Bounded exhaustive check of the pstack session-start hook's JSON contract.
-//
-// Property: for every model sheet S in the scope below, running the hook emits
-// stdout that parses as JSON, and hook_specific_output.additional_context
-// contains S verbatim.
-//
-// Why this property: Vibe fails a session_start hook open. A hook that emits
-// invalid JSON is dropped with a warning, so the session silently loses the
-// model sheet and the model never learns the role table. Nothing crashes, and
-// the transcript looks normal.
-//
-// Why this tool: the hook builds its JSON with JSON.stringify, so the risk is
-// not the escaper but the sheet text that reaches it. This checks the real
-// script with generated inputs rather than a hand model of the encoder. The
-// search is bounded and exhaustive over the alphabet below, not random.
-//
-// Scope: every sheet of length 1..2 over ALPHABET, plus TARGETED. The search
-// stopped at length 2 when the hook moved to JSON.stringify. The escaper is now
-// Node's, so a longer search would test the platform rather than this script.
-// What the script still contributes is the line split that keeps a CRLF sheet
-// verbatim and the context assembled around it, and a pair of characters is
-// enough to catch an interaction between them. It does not cover the hook's
-// sheet-resolution order (tests/session-start.test.mjs does).
+// The search stops at length 2 because JSON.stringify owns the escaping now. A
+// longer search would test Node rather than this script, and it costs a process
+// spawn per sheet.
 //
 // Confirmed able to fail: replacing JSON.stringify with a hand-rolled escaper
 // that handles `\`, `"`, `\n`, `\t`, `\r`, `\b`, and `\f` but not the remaining
-// control characters makes 119 of these 164 sheets report invalid JSON.
+// control characters makes 47 of these 164 sheets report invalid JSON.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

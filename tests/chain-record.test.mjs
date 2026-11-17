@@ -1,7 +1,5 @@
-// tests/chain-record.test.mjs
-//
 // The recorder as behavior: every case runs the real `chain.mjs record` against
-// a real run directory, exactly as tests/chain-record.test.sh did through `sh`.
+// a real run directory.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
@@ -47,7 +45,6 @@ function recordAsync(input) {
   });
 }
 
-/** A run directory with the marker the recorder requires. */
 function newRun(session) {
   mkdirSync(join(data, "runs", session), { recursive: true });
   writeFileSync(join(data, "runs", session, "ready"), "");

@@ -1,7 +1,4 @@
-// tests/session-start.test.mjs
-//
-// The session-start hook's sheet resolution and run-directory contract, driven
-// through the real script exactly as tests/session-start.test.sh did through `sh`.
+// The session-start hook's sheet resolution and run-directory contract.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";

@@ -1,10 +1,7 @@
 // tests/chain-audit.test.mjs
 //
 // The audit as behavior, not as a model of it: every case runs the real
-// `chain.mjs audit` against real files. The table covers the `when` predicates,
-// the `scope` filter, the `field` dispatch, the `forbid` inversion, the
-// always-on `opening-a-pr` set, and the `contested` cross-check, because each of
-// those is a place where a wrong answer silently allows a skipped step.
+// `chain.mjs audit` against real files.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
