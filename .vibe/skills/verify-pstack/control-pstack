@@ -93,14 +93,10 @@ cmd_cleanup() {
     printf 'nothing to clean at %s\n' "$VHOME"
     return 0
   fi
-  # Vibe pins read-only plugin snapshots under logs/session/plugins/, so a plain
-  # rm -rf leaves the tree behind. Make it writable first.
-  chmod -R u+w "$VHOME" 2>/dev/null || true
-  rm -rf "$VHOME" "$SCRATCH"
-  if [ -d "$VHOME" ]; then
-    printf 'cleanup incomplete: %s still exists\n' "$VHOME" >&2
-    return 1
-  fi
+  status=0
+  sh "$ROOT/scripts/remove-tree.sh" "$VHOME" || status=1
+  sh "$ROOT/scripts/remove-tree.sh" "$SCRATCH" || status=1
+  [ "$status" -eq 0 ] || return 1
   printf 'removed %s and %s; artifacts kept at %s\n' "$VHOME" "$SCRATCH" "$ART"
 }
 
