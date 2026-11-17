@@ -3,6 +3,8 @@ import { doctor } from "./doctor.mjs";
 import { installPlugin, uninstallPlugin } from "./install.mjs";
 import { PACKAGE_ROOT, resolveLayout } from "./layout.mjs";
 import { createVibeProbe } from "./vibe.mjs";
+import { verify } from "./verify.mjs";
+import { verifySessionContext } from "../scripts/mock-drive.mjs";
 
 export class UsageError extends Error {
   constructor(message) {
@@ -18,6 +20,7 @@ const USAGE = `usage: pstack-vibe <command> [options]
   update     reinstall over an existing copy (same as install --force)
   uninstall  remove the plugin directory
   doctor     check the install and print one PASS or FAIL line per check
+  verify     install into a temp home, doctor, drive a session, clean up
 
   --project  use ./.vibe instead of $VIBE_HOME (or ~/.vibe)
   --force    replace a directory that is not a pstack plugin
@@ -84,17 +87,45 @@ async function runDoctor(command, io) {
   return report.ok ? 0 : 1;
 }
 
+async function runVerify(command, io) {
+  const report = await verify({
+    env: process.env,
+    cwd: process.cwd(),
+    plugin: PLUGIN_SOURCE,
+    vibe: createVibeProbe(),
+    drive: verifySessionContext,
+  });
+
+  io.out(`verify: ${report.vibeVersion}, tested range ${report.supported}`);
+  for (const check of report.doctor.checks) io.out(`${check.ok ? "PASS" : "FAIL"}  ${check.detail}`);
+  for (const entry of report.drive.cases) io.out(`${entry.ok ? "PASS" : "FAIL"}  ${entry.id}: ${entry.detail}`);
+
+  if (report.ok) {
+    io.out("verify: PASS");
+    return 0;
+  }
+
+  const failedChecks = report.doctor.checks.filter((check) => !check.ok).length;
+  const failedCases = report.drive.cases.filter((entry) => !entry.ok).length;
+  io.out(
+    `verify: FAIL (doctor ${failedChecks} of ${report.doctor.checks.length} failed, drive ${failedCases} of ${report.drive.cases.length} failed); kept ${report.home}`,
+  );
+  return 1;
+}
+
 const COMMANDS = {
   install: { force: false, run: runInstall },
   update: { force: true, run: runInstall },
   uninstall: { force: false, run: runUninstall },
   doctor: { force: false, run: runDoctor },
+  verify: { force: false, run: runVerify },
 };
 
 /**
  * @typedef {{ kind: "install", verb: "install" | "update", scope: string, force: boolean, dryRun: boolean }
  *   | { kind: "uninstall", scope: string, purge: boolean, dryRun: boolean }
  *   | { kind: "doctor", scope: string }
+ *   | { kind: "verify", scope: string }
  *   | { kind: "help" }} Command
  */
 
@@ -134,6 +165,7 @@ export function parseArgs(argv) {
 
   if (verb === "uninstall") return { kind: "uninstall", scope, purge, dryRun };
   if (verb === "doctor") return { kind: "doctor", scope };
+  if (verb === "verify") return { kind: "verify", scope };
   return { kind: "install", verb, scope, force: force ?? COMMANDS[verb].force, dryRun };
 }
 
