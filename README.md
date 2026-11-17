@@ -189,7 +189,8 @@ and pick an alias you have. Do not hand-edit a profile to an alias you have not 
 `~/.vibe/plugins/pstack/ai.mistral.vibe/hooks.toml` exists and that
 `ai.mistral.vibe/scripts/session-start.sh` is executable. The hook runs `sh` on that script,
 so a missing file or a bad `$PLUGIN_ROOT` leaves the session without the model sheet. Start a
-new session after fixing it; hooks load at session start.
+new session after fixing it; hooks load at session start. `node scripts/mock-drive.mjs` proves
+the hook fires without an API key, and exits non-zero when it does not.
 
 **A change had no effect.** Start a new session. Model sheets and agent profiles are read
 when a session starts, not while one is running. Run `/reload-plugins` only after changing

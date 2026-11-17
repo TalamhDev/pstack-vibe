@@ -25,3 +25,14 @@ jobs:
       - run: shellcheck scripts/*.sh generated/vibe/ai.mistral.vibe/scripts/*.sh
       - run: npx --yes markdownlint-cli2 "README.md" "NOTICE.md" "SECURITY.md" "CHANGELOG.md" "docs/**/*.md"
       - run: npx --yes github-actionlint
+
+  drive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: astral-sh/setup-uv@v7
+      - run: uv tool install mistral-vibe==3.1.2
+      - run: node scripts/mock-drive.mjs

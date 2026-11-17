@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)
-PLUGIN_SRC="$ROOT_DIR/generated/vibe"
+PLUGIN_SRC=${PLUGIN_SRC:-"$ROOT_DIR/generated/vibe"}
 
 command_name=install
 scope=user
