@@ -210,7 +210,7 @@ an alias you have. Do not hand-edit a profile to an alias you have not confirmed
 **A subagent profile is rejected.** Vibe reports `subagent_type_rejected` and names the reason,
 most often `active_model: '<alias>' is not an alias defined in [[models]]` or `... is excluded
 by allowed_models`. Fix that profile's `active_model` to a confirmed alias. `doctor` cannot see
-this. Its agent-profiles line only proves the file exists, and it says so on the line.
+this. Its profile check only proves the file exists.
 
 **A subagent type is unknown.** `subagent_type_not_found` means Vibe never bound the name, and
 it gives no reason. That is a Vibe defect rather than a pstack one: a profile Vibe drops

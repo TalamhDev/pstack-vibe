@@ -50,8 +50,8 @@ All notable changes to pstack-vibe are recorded here. The format follows
 - The agent profiles pstack writes no longer carry `schema_version`. Vibe does not read it, so
   it landed in the profile's config overrides and raised `UnusedConfigKeysError`, which Vibe
   logged as a warning on every session start.
-- `doctor`'s agent-profiles line says what it checked. It proves the file exists, not that Vibe
-  binds the profile, and it now says so instead of reporting the profiles as installed.
+- `doctor`'s profile check is named `agent-profile-files` and says what it checked. It proves
+  the file exists, not that Vibe binds the profile, and it no longer reads as though it did.
 
 ## [0.15.42-vibe.1] - 2026-11-16
 

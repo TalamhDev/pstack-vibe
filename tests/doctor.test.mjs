@@ -89,7 +89,7 @@ test("the check registry has ten uniquely identified checks", () => {
     "chain",
     "plugin-data",
     "model-sheet",
-    "agent-profiles",
+    "agent-profile-files",
     "model-aliases",
     "vibe-compat",
   ]);
@@ -99,7 +99,7 @@ test("a complete install passes every check", async () => {
   const home = await fixture();
   try {
     const result = await home.run();
-    expect(result, 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin; this does not prove Vibe binds them$/m);
+    expect(result, 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin$/m);
     expect(result, 0, /^PASS {2}model aliases recorded in the sheet exist in /m);
     expect(result, 0, /^PASS {2}chain: chain\.tsv is installed and names only installed playbooks$/m);
     expect(result, 0, /^PASS {2}chain: .* is writable$/m);
@@ -216,7 +216,7 @@ test("a comment line naming a profile does not satisfy the profile check", async
         "",
       ].join("\n"),
     );
-    expect(await home.run(), 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin; this does not prove Vibe binds them$/m);
+    expect(await home.run(), 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin$/m);
   } finally {
     await home.cleanup();
   }
