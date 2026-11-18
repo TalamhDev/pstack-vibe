@@ -264,11 +264,12 @@ The port is independent and is not endorsed by Lauren Tan, Mistral, or Cursor.
 
 ## Limitations
 
-- **Two skill helpers need a POSIX shell.** The hooks are Node and run on every platform Vibe
+- **Two skill helpers need bash.** The hooks are Node and run on every platform Vibe
   supports, but `skills/poteto-mode/scripts/worktree-audit.sh` and
-  `skills/show-me-your-work/scripts/log.sh` are POSIX shell. On Windows they need Git Bash,
-  which Vibe's `bash` tool already prefers when it is installed. Both are optional: the
-  worktree cleanup playbook and the decision log work without them.
+  `skills/show-me-your-work/scripts/log.sh` are bash scripts. On Windows they need Git Bash,
+  which Vibe's `bash` tool already prefers when it is installed. The decision log works
+  without `log.sh`, since a bare `printf` appending a row is enough. The worktree cleanup
+  playbook calls `worktree-audit.sh` as its first step, so that playbook needs it.
 - **Experimental plugin format.** The port targets the Vibe 3.1.2 plugin format: `plugin.json`,
   `skills/`, and `ai.mistral.vibe/{hooks.toml,agents/*.toml}`. The format can change, and a
   change can break the generated tree.

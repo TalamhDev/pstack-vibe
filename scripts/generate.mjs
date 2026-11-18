@@ -22,11 +22,15 @@ const ADAPTER_DOC = join(ROOT, "docs", "harness", "vibe.md");
 // budget ships with this port.
 const BUDGET_EFFORT = { large: "high" };
 
+const NODE_FLOOR = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))
+  .engines.node.match(/\d+/)[0];
+
 const RUNTIME_NOTE = [
   "## Runtime",
   "",
-  "The core plugin has no runtime dependency. The optional `watch-pr` helper under",
-  "`skills/poteto-mode/scripts/` requires bun and `npm install` in that directory.",
+  `The plugin needs Node ${NODE_FLOOR} or newer. Every hook runs \`node\`, so a session without Node on`,
+  "`PATH` starts without the model sheet. The optional `watch-pr` helper under",
+  "`skills/poteto-mode/scripts/` also requires bun and `npm install` in that directory.",
 ].join("\n");
 
 const MODEL_KNOWLEDGE_FRONTMATTER = [

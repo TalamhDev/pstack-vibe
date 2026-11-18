@@ -147,7 +147,7 @@ prints the run directory and whether it is launched. Set `RUN_ID` to name a run,
 
 ## Gotchas
 
-- **A project sheet shadows the run home's sheet.** `session-start.sh` checks the
+- **A project sheet shadows the run home's sheet.** `session-start.mjs` checks the
   session's cwd and `./.vibe` before `$VIBE_HOME`, so a `.vibe/pstack-models.md` in the
   scratch cwd wins over the planted one. Keep the scratch cwd free of one, or the run
   proves that sheet instead.

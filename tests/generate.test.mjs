@@ -185,6 +185,23 @@ test("poteto-help links point at the repo and README documents the optional runt
   assert.ok(existsSync(join(out, "skills/poteto-mode/scripts/watch-pr/watch-pr")));
 });
 
+test("the shipped README's runtime claim matches the hooks and the engines floor", async () => {
+  const out = await generateRealPlugin();
+
+  const hooks = readFileSync(join(out, "ai.mistral.vibe/hooks.toml"), "utf8");
+  const interpreters = [...hooks.matchAll(/^command = "(\S+)/gm)].map((match) => match[1]);
+  assert.deepEqual([...new Set(interpreters)], ["node"], "a hook does not run node");
+
+  const engines = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).engines.node;
+  const floor = engines.match(/\d+/)[0];
+
+  const readme = readFileSync(join(out, "README.md"), "utf8");
+  const runtime = readme.slice(readme.indexOf("## Runtime"));
+  assert.match(runtime, new RegExp(`Node ${floor}`), `the Runtime section does not name Node ${floor}`);
+  assert.doesNotMatch(readme, /no runtime dependency/, "the README still claims no runtime dependency");
+  assert.doesNotMatch(readme, /macOS and Linux only/, "the README still claims macOS and Linux only");
+});
+
 test("the chain manifest and every vibe script are generated with their modes", async () => {
   const out = await generateRealPlugin();
 
