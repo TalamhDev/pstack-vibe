@@ -30,8 +30,7 @@ Preconditions:
   planted sheet is distinguishable from the real one.
 
 - **Plant a distinguishable sheet.** Run `control-pstack sheet pstack-glm`. Stdout
-  reads `planted $RUN_DIR/scratch/.vibe/pstack-models.md with security review:
-  pstack-glm`.
+  reads `planted $RUN_DIR/home/pstack-models.md with security review: pstack-glm`.
 - **Prove the hook fired and read the planted sheet.** Run `control-pstack drive
   "Without reading any file, state the profile the pstack model sheet assigns to the
   'security review' role. Answer with just the profile name."`. Stdout is `pstack-glm`
@@ -49,11 +48,12 @@ Preconditions:
 
 ## Gotchas
 
-- **The hook reads `$HOME/.vibe`, not `$VIBE_HOME`.** `session-start.sh` resolves the
+- **A project sheet shadows the run home's sheet.** `session-start.mjs` resolves the
   sheet from the payload cwd, then `./.vibe/pstack-models.md`, then
-  `$HOME/.vibe/pstack-models.md`. Overriding `VIBE_HOME` alone does not isolate the
-  sheet, so a run without a planted sheet proves the real home's sheet and nothing
-  about the run.
+  `$VIBE_HOME/pstack-models.md`, where `VIBE_HOME` defaults to `$HOME/.vibe`. Overriding
+  `VIBE_HOME` does isolate the home, but a `.vibe/pstack-models.md` in the scratch cwd
+  still wins over the planted one, so a run with one proves that sheet and nothing about
+  the run.
 - The hook runs at session start only. Editing the sheet mid-session changes nothing
   until the next session.
 - The hook cannot block a session. A failing hook shows a warning and the session
@@ -61,4 +61,4 @@ Preconditions:
 - The hook's output is `hook_specific_output.additional_context`, which is invisible in
   the transcript. Ask the model about it rather than looking for it on screen.
 - A sheet with control characters must still produce valid JSON. That path is covered
-  by `tests/session-start.test.sh`, not by a drive.
+  by `tests/session-start.test.mjs`, not by a drive.
