@@ -213,9 +213,12 @@ by allowed_models`. Fix that profile's `active_model` to a confirmed alias. `doc
 this. Its profile check only proves the file exists.
 
 **A subagent type is unknown.** `subagent_type_not_found` means Vibe never bound the name, and
-it gives no reason. That is a Vibe defect rather than a pstack one: a profile Vibe drops
-without recording a rejection is indistinguishable from a name that never existed. Start a new
-session. If it persists, report it with the session id from `~/.vibe/logs/session/`.
+it gives no reason. A profile that fails to load or validate reports `subagent_type_rejected`
+with the reason instead, so this means the profile was not discovered at all. Check that the
+file is in `~/.vibe/agents/` or the plugin's `ai.mistral.vibe/agents/`, that it sets
+`agent_type = "subagent"`, and that `enabled_agents` in `config.toml` does not exclude it.
+Start a new session. If it persists, report it with the session id from
+`~/.vibe/logs/session/`.
 
 **The session-start hook does not fire.** Check that
 `~/.vibe/plugins/pstack/ai.mistral.vibe/hooks.toml` exists and that
