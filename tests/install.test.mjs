@@ -7,7 +7,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
-  statSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,6 +26,10 @@ const probeOf = (text) => async () => ({ kind: "ok", version: parseVibeVersion(t
 const supported = probeOf("vibe 3.1.2");
 const unsupported = probeOf("vibe 3.9.9");
 const absent = async () => ({ kind: "absent" });
+
+/** The fixture is a shell script, which Windows cannot execute; the compat job drives the real CLI there. */
+const SHELL_FIXTURE =
+  process.platform === "win32" ? "a shell-script fixture is not executable on Windows" : false;
 
 function scratch() {
   return mkdtempSync(join(tmpdir(), "pstack-install-"));
@@ -63,13 +67,16 @@ test("install writes the plugin manifest, a skill, and the hook file", async () 
   }
 });
 
-test("install keeps the hook scripts executable", async () => {
+test("install ships the hook scripts as readable files", async () => {
   const work = scratch();
   try {
     const layout = userLayout(join(work, "home"));
     await install(layout);
-    const mode = statSync(join(layout.pluginDir, "ai.mistral.vibe/scripts/chain.sh")).mode;
-    assert.notEqual(mode & 0o111, 0, "the installed chain.sh is not executable");
+    for (const name of ["chain.mjs", "session-start.mjs"]) {
+      const path = join(layout.pluginDir, "ai.mistral.vibe/scripts", name);
+      assert.ok(existsSync(path), `the installed ${name} is missing`);
+      assert.ok(readFileSync(path, "utf8").length > 0, `the installed ${name} is empty`);
+    }
   } finally {
     await removeTree(work);
   }
@@ -290,7 +297,7 @@ test("an interrupted install is swept by the next one", async () => {
   }
 });
 
-test("the CLI refuses to install against an untested Vibe on PATH", async () => {
+test("the CLI refuses to install against an untested Vibe on PATH", { skip: SHELL_FIXTURE }, async () => {
   const work = scratch();
   try {
     const bin = join(work, "bin");
@@ -311,7 +318,7 @@ test("the CLI refuses to install against an untested Vibe on PATH", async () => 
   }
 });
 
-test("the CLI installs and uninstalls against a tested Vibe on PATH", async () => {
+test("the CLI installs and uninstalls against a tested Vibe on PATH", { skip: SHELL_FIXTURE }, async () => {
   const work = scratch();
   try {
     const bin = join(work, "bin");

@@ -1,10 +1,7 @@
 // tests/chain-audit.test.mjs
 //
 // The audit as behavior, not as a model of it: every case runs the real
-// `chain.sh audit` against real files. The table covers the `when` predicates,
-// the `scope` filter, the `field` dispatch, the `forbid` inversion, the
-// always-on `opening-a-pr` set, and the `contested` cross-check, because each of
-// those is a place where a wrong answer silently allows a skipped step.
+// `chain.mjs audit` against real files.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -15,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
-const SCRIPT = join(ROOT, "generated/vibe/ai.mistral.vibe/scripts/chain.sh");
+const SCRIPT = join(ROOT, "generated/vibe/ai.mistral.vibe/scripts/chain.mjs");
 
 const read = (path) => `file_system.read_file\tpath=${path}`;
 const bash = (command) => `file_system.bash\tcmd=${command}`;
@@ -72,7 +69,7 @@ function audit({ evidence, claim, command, body = BODY }) {
     const full = command.replace("$BODY", bodyPath);
     try {
       const stdout = execFileSync(
-        "sh",
+        process.execPath,
         [SCRIPT, "audit", "--evidence", evidencePath, "--claim", claimPath, "--command", full, "--cwd", work],
         { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
       );
@@ -390,7 +387,7 @@ test("a malformed manifest is an internal error, not a deny", () => {
     let stdout = "";
     try {
       stdout = execFileSync(
-        "sh",
+        process.execPath,
         [SCRIPT, "audit", "--evidence", evidencePath, "--claim", evidencePath, "--command", ship()],
         { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, PLUGIN_ROOT: plugin } },
       );
@@ -421,7 +418,7 @@ test("a row outside its closed set is an internal error, not a deny", () => {
     let stdout = "";
     try {
       stdout = execFileSync(
-        "sh",
+        process.execPath,
         [SCRIPT, "audit", "--evidence", evidencePath, "--claim", evidencePath, "--command", "./bin/pstack-vibe.mjs update"],
         { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, PLUGIN_ROOT: plugin } },
       );

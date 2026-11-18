@@ -8,6 +8,10 @@ import { TreeSurvivedError, UnsafePathError, removeTree } from "../src/tree.mjs"
 
 const SNAPSHOT = "logs/session/plugins/packages/59/594b4f3ff6cc67052de979b1986085e3bbf63280bc959c4c20b64de87e0f5eb0";
 
+/** Windows ignores chmod on directories and force-removes read-only files, so neither fixture can be built there. */
+const READ_ONLY_TREE =
+  process.platform === "win32" ? "chmod cannot make a tree unremovable on Windows" : false;
+
 function scratch() {
   return mkdtempSync(join(tmpdir(), "pstack-tree-"));
 }
@@ -29,7 +33,7 @@ async function cleanup(path) {
   await removeTree(path);
 }
 
-test("a plain recursive removal leaves the read-only snapshot behind", async () => {
+test("a plain recursive removal leaves the read-only snapshot behind", { skip: READ_ONLY_TREE }, async () => {
   const work = scratch();
   try {
     const home = join(work, "control/home");
@@ -61,7 +65,7 @@ test("removes a read-only snapshot and leaves artifacts outside it", async () =>
   }
 });
 
-test("reports failure and names the path when the tree survives", async () => {
+test("reports failure and names the path when the tree survives", { skip: READ_ONLY_TREE }, async () => {
   const work = scratch();
   try {
     const parent = join(work, "stuck");

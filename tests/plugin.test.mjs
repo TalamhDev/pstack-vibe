@@ -37,7 +37,8 @@ test("hooks.toml wires the context, arm, record, and gate hooks", () => {
   assert.equal(recorder.strict, undefined);
 
   for (const hook of hooks.hooks) {
-    const named = hook.command.match(/\$PLUGIN_ROOT\/(\S+?)"/);
+    assert.ok(!hook.command.includes("$"), `hook command depends on a shell variable: ${hook.command}`);
+    const named = hook.command.match(/(\S+\.mjs)/);
     assert.ok(named, `hook command names no plugin script: ${hook.command}`);
     assert.ok(existsSync(join(plugin, named[1])), `missing script: ${named[1]}`);
   }

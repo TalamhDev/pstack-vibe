@@ -17,6 +17,10 @@ import {
 
 const version = (text) => parseVibeVersion(text);
 
+/** The fixture is a shell script, which Windows cannot execute; the compat job drives the real probe there. */
+const SHELL_FIXTURE =
+  process.platform === "win32" ? "a shell-script fixture is not executable on Windows" : false;
+
 test("parseVibeVersion reads the triple out of a version line", () => {
   assert.deepEqual(version("vibe 3.1.2"), { major: 3, minor: 1, patch: 2, text: "vibe 3.1.2" });
   assert.deepEqual(version("3.1.2"), { major: 3, minor: 1, patch: 2, text: "3.1.2" });
@@ -116,7 +120,7 @@ test("the probe reports failed for a command that exits non-zero", async () => {
   assert.deepEqual(await probe(), { kind: "failed" });
 });
 
-test("the probe reports unparseable for a command that prints no version", async () => {
+test("the probe reports unparseable for a command that prints no version", { skip: SHELL_FIXTURE }, async () => {
   const bin = mkdtempSync(join(tmpdir(), "pstack-probe-"));
   const command = join(bin, "vibe");
   writeFileSync(command, "#!/bin/sh\necho 'vibe nightly'\n");
@@ -131,7 +135,7 @@ test("the probe reports unparseable for a command that prints no version", async
   }
 });
 
-test("the probe reports ok for a command that prints a version", async () => {
+test("the probe reports ok for a command that prints a version", { skip: SHELL_FIXTURE }, async () => {
   const bin = mkdtempSync(join(tmpdir(), "pstack-probe-"));
   const command = join(bin, "vibe");
   writeFileSync(command, "#!/bin/sh\necho 'vibe 3.1.2'\n");

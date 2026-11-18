@@ -33,9 +33,9 @@ the prebuilt plugin tree, so there is no build step and no git clone. Name a ver
 it, as in `npx pstack-vibe@0.15.42-vibe.1 install`.
 
 Installing needs Node 22 or newer, because the installer and the doctor are Node programs.
-`npx` ships with Node, so a machine that has `npx` has what it needs. The plugin itself does
-not need Node once installed. It is a directory of markdown and shell hook scripts that Vibe
-reads.
+`npx` ships with Node, so a machine that has `npx` has what it needs. Node 22 is also needed
+after the install, because Vibe runs the session-start hook at the start of every session.
+The hooks are Node programs so they run on every platform Vibe supports, including Windows.
 
 Project scope installs into the current repository instead, so the plugin travels with it:
 
@@ -209,10 +209,10 @@ an alias you have. Do not hand-edit a profile to an alias you have not confirmed
 
 **The session-start hook does not fire.** Check that
 `~/.vibe/plugins/pstack/ai.mistral.vibe/hooks.toml` exists and that
-`ai.mistral.vibe/scripts/session-start.sh` is executable. The hook runs `sh` on that script,
-so a missing file or a bad `$PLUGIN_ROOT` leaves the session without the model sheet. Start a
-new session after fixing it; hooks load at session start. `npx pstack-vibe verify` proves the
-hook fires without an API key, and exits non-zero when it does not.
+`ai.mistral.vibe/scripts/session-start.mjs` is present. The hook runs `node` on that script,
+so a missing file or a `node` that is not on `PATH` leaves the session without the model
+sheet. Start a new session after fixing it; hooks load at session start. `npx pstack-vibe
+verify` proves the hook fires without an API key, and exits non-zero when it does not.
 
 **A change had no effect.** Start a new session. Model sheets and agent profiles are read
 when a session starts, not while one is running. Run `/reload-plugins` only after changing
@@ -264,8 +264,11 @@ The port is independent and is not endorsed by Lauren Tan, Mistral, or Cursor.
 
 ## Limitations
 
-- **macOS and Linux only.** The installer and doctor are Node and portable, but the
-  session-start hook and the chain recorder are POSIX `sh`. Windows support is a follow-up.
+- **Two skill helpers need a POSIX shell.** The hooks are Node and run on every platform Vibe
+  supports, but `skills/poteto-mode/scripts/worktree-audit.sh` and
+  `skills/show-me-your-work/scripts/log.sh` are POSIX shell. On Windows they need Git Bash,
+  which Vibe's `bash` tool already prefers when it is installed. Both are optional: the
+  worktree cleanup playbook and the decision log work without them.
 - **Experimental plugin format.** The port targets the Vibe 3.1.2 plugin format: `plugin.json`,
   `skills/`, and `ai.mistral.vibe/{hooks.toml,agents/*.toml}`. The format can change, and a
   change can break the generated tree.

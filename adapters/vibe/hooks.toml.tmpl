@@ -1,24 +1,24 @@
 [[hooks]]
 name = "pstack-context"
 type = "session_start"
-command = "sh \"$PLUGIN_ROOT/ai.mistral.vibe/scripts/session-start.sh\""
+command = "node ai.mistral.vibe/scripts/session-start.mjs"
 description = "Load the pstack model sheet, the adapter doc, and the poteto-mode pointer."
 
 [[hooks]]
 name = "pstack-chain-arm"
 type = "pre_agent"
-command = "sh \"$PLUGIN_ROOT/ai.mistral.vibe/scripts/chain.sh\" arm"
+command = "node ai.mistral.vibe/scripts/chain.mjs arm"
 description = "Arm the chain audit when the prompt starts a poteto-mode run."
 
 [[hooks]]
 name = "pstack-chain-record"
 type = "post_tool"
-command = "sh \"$PLUGIN_ROOT/ai.mistral.vibe/scripts/chain.sh\" record"
+command = "node ai.mistral.vibe/scripts/chain.mjs record"
 description = "Record one line of poteto-mode chain evidence per tool call."
 
 [[hooks]]
 name = "pstack-chain-gate"
 type = "pre_tool"
 match = "re:bash|process_start"
-command = "sh \"$PLUGIN_ROOT/ai.mistral.vibe/scripts/chain.sh\" gate"
+command = "node ai.mistral.vibe/scripts/chain.mjs gate"
 description = "Block gh pr create until the poteto-mode chain audit passes."
