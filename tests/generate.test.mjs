@@ -224,6 +224,26 @@ test("the chain manifest and every vibe script are generated with their modes", 
   }
 });
 
+test("the generated agent profiles carry no key Vibe does not read", async () => {
+  const out = await generateRealPlugin();
+
+  // Vibe's agent-profile reader consumes display_name, description, safety,
+  // agent_type and instructions. Every other key becomes a config override, so
+  // an unrecognised one raises UnusedConfigKeysError and Vibe logs a warning on
+  // every session start.
+  const agentsDir = join(out, "ai.mistral.vibe/agents");
+  const names = readdirSync(agentsDir).filter((name) => name.endsWith(".toml"));
+  assert.ok(names.length > 0, "no agent profiles were generated");
+  for (const name of names) {
+    const text = readFileSync(join(agentsDir, name), "utf8");
+    assert.doesNotMatch(
+      text,
+      /^schema_version\s*=/m,
+      `${name} carries schema_version, which Vibe does not read`,
+    );
+  }
+});
+
 test("generation removes stale files and leaves unrelated files alone", async () => {
   const dir = mkdtempSync(join(tmpdir(), "pstack-clean-"));
   const vendor = join(dir, "vendor");
