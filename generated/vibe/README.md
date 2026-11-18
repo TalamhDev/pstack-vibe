@@ -54,8 +54,11 @@ MIT, copyright 2026 telamh; upstream's MIT notice is in `LICENSE`.
 
 ## Limitations
 
-- macOS and Linux only. The installer and doctor are Node, but the session-start hook and the
-  chain recorder are POSIX `sh`.
+- Two skill helpers need bash. The hooks are Node and run everywhere Vibe does, including
+  Windows, but `skills/poteto-mode/scripts/worktree-audit.sh` and
+  `skills/show-me-your-work/scripts/log.sh` are bash scripts. On Windows they need Git Bash.
+  The decision log works without `log.sh`, since a bare `printf` appending a row is enough.
+  The worktree cleanup playbook calls `worktree-audit.sh` as its first step.
 - The Vibe plugin format is experimental and can change.
 - Cursor-only features are skipped with a one-line note: Bugbot, Cursor webhook routines,
   cloud agents, Custom Modes, and Cursor's built-in `/create-skill`.
@@ -68,5 +71,6 @@ The full README, guide, adapter doc, and installer live at
 
 ## Runtime
 
-The core plugin has no runtime dependency. The optional `watch-pr` helper under
-`skills/poteto-mode/scripts/` requires bun and `npm install` in that directory.
+The plugin needs Node 22 or newer. Every hook runs `node`, so a session without Node on
+`PATH` starts without the model sheet. The optional `watch-pr` helper under
+`skills/poteto-mode/scripts/` also requires bun and `npm install` in that directory.
