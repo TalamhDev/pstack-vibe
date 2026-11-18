@@ -117,7 +117,6 @@ For each distinct profile the table uses, write an agent TOML in the agents dire
 Read `$PLUGIN_ROOT/ai.mistral.vibe/agents/poteto-agent.toml`. Copy its `instructions` block verbatim. Write:
 
 ```toml
-schema_version = 1
 agent_type = "subagent"
 display_name = "pstack deepseek"
 description = "pstack code delegate on <alias>."

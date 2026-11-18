@@ -163,7 +163,7 @@ const modelSheet = {
 };
 
 const agentProfiles = {
-  id: "agent-profiles",
+  id: "agent-profile-files",
   async run({ sheet, agentsDir, pluginDir }) {
     if (!sheet) return { ok: false, detail: "agent profiles: cannot check without a model sheet" };
 
@@ -175,7 +175,10 @@ const agentProfiles = {
     }
     return missing.length
       ? { ok: false, detail: `agent profiles missing for: ${missing.join(" ")}` }
-      : { ok: true, detail: "agent profiles named in the sheet are installed" };
+      : {
+          ok: true,
+          detail: "agent profiles named in the sheet exist in the agents directory or the plugin",
+        };
   },
 };
 

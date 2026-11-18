@@ -62,7 +62,7 @@ PASS  hook file at <home>/plugins/pstack/ai.mistral.vibe/hooks.toml
 PASS  chain: chain.tsv is installed and names only installed playbooks
 PASS  chain: <home>/plugin-data/pstack is writable
 PASS  model sheet at <home>/pstack-models.md
-PASS  agent profiles named in the sheet are installed
+PASS  agent profiles named in the sheet exist in the agents directory or the plugin
 PASS  model aliases recorded in the sheet exist in <home>/config.toml
 PASS  vibe 3.1.2 is within the tested range >=3.1.2 <3.2.0
 ```
