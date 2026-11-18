@@ -28,7 +28,6 @@ const PASSING_SHEET = [
 ].join("\n");
 
 const DEEPSEEK_PROFILE = [
-  "schema_version = 1",
   'agent_type = "subagent"',
   'display_name = "pstack deepseek"',
   'description = "pstack code delegate on deepseek-flash."',
@@ -100,7 +99,7 @@ test("a complete install passes every check", async () => {
   const home = await fixture();
   try {
     const result = await home.run();
-    expect(result, 0, /^PASS {2}agent profiles named in the sheet are installed$/m);
+    expect(result, 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin; this does not prove Vibe binds them$/m);
     expect(result, 0, /^PASS {2}model aliases recorded in the sheet exist in /m);
     expect(result, 0, /^PASS {2}chain: chain\.tsv is installed and names only installed playbooks$/m);
     expect(result, 0, /^PASS {2}chain: .* is writable$/m);
@@ -174,7 +173,6 @@ test("a family with no alias in config.toml fails, then passes once added", asyn
     writeFileSync(
       join(home.layout.agentsDir, "pstack-qwen.toml"),
       [
-        "schema_version = 1",
         'agent_type = "subagent"',
         'display_name = "pstack qwen"',
         'description = "pstack code delegate on qwen-3-max."',
@@ -218,7 +216,7 @@ test("a comment line naming a profile does not satisfy the profile check", async
         "",
       ].join("\n"),
     );
-    expect(await home.run(), 0, /^PASS {2}agent profiles named in the sheet are installed$/m);
+    expect(await home.run(), 0, /^PASS {2}agent profiles named in the sheet exist in the agents directory or the plugin; this does not prove Vibe binds them$/m);
   } finally {
     await home.cleanup();
   }

@@ -1,4 +1,3 @@
-schema_version = 1
 agent_type = "subagent"
 display_name = "pstack poteto-agent"
 description = "Delegate subagent for code-writing and helper tasks spawned during a `/poteto-mode` run. Use a fresh subagent per task; do not use it to run `/poteto-mode` itself. Read the `poteto-mode` SKILL.md in full before any work, including its inline Principles index."

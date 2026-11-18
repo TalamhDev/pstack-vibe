@@ -15,7 +15,6 @@ const FIXTURE_SHEET = [
 ].join("\n");
 
 const FIXTURE_PROFILE = [
-  "schema_version = 1",
   'agent_type = "subagent"',
   'display_name = "pstack deepseek"',
   'description = "pstack code delegate on deepseek-flash."',

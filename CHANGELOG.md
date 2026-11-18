@@ -45,6 +45,14 @@ All notable changes to pstack-vibe are recorded here. The format follows
 - `adapters/vibe/scripts/session-start.sh`, `chain.sh`, and `json.sh`, and their three shell
   tests, replaced by `session-start.mjs`, `chain.mjs`, and the Node test suites.
 
+### Fixed
+
+- The agent profiles pstack writes no longer carry `schema_version`. Vibe does not read it, so
+  it landed in the profile's config overrides and raised `UnusedConfigKeysError`, which Vibe
+  logged as a warning on every session start.
+- `doctor`'s agent-profiles line says what it checked. It proves the file exists, not that Vibe
+  binds the profile, and it now says so instead of reporting the profiles as installed.
+
 ## [0.15.42-vibe.1] - 2026-11-16
 
 The first release. pstack 0.15.42, ported to the Mistral Vibe CLI.

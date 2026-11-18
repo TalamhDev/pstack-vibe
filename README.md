@@ -207,6 +207,16 @@ means the plugin directory is incomplete; reinstall with `npx pstack-vibe update
 alias is missing, add the model entry to the config, or rerun `/pstack:setup-pstack` and pick
 an alias you have. Do not hand-edit a profile to an alias you have not confirmed.
 
+**A subagent profile is rejected.** Vibe reports `subagent_type_rejected` and names the reason,
+most often `active_model: '<alias>' is not an alias defined in [[models]]` or `... is excluded
+by allowed_models`. Fix that profile's `active_model` to a confirmed alias. `doctor` cannot see
+this. Its agent-profiles line only proves the file exists, and it says so on the line.
+
+**A subagent type is unknown.** `subagent_type_not_found` means Vibe never bound the name, and
+it gives no reason. That is a Vibe defect rather than a pstack one: a profile Vibe drops
+without recording a rejection is indistinguishable from a name that never existed. Start a new
+session. If it persists, report it with the session id from `~/.vibe/logs/session/`.
+
 **The session-start hook does not fire.** Check that
 `~/.vibe/plugins/pstack/ai.mistral.vibe/hooks.toml` exists and that
 `ai.mistral.vibe/scripts/session-start.mjs` is present. The hook runs `node` on that script,

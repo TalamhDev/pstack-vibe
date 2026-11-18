@@ -175,7 +175,11 @@ const agentProfiles = {
     }
     return missing.length
       ? { ok: false, detail: `agent profiles missing for: ${missing.join(" ")}` }
-      : { ok: true, detail: "agent profiles named in the sheet are installed" };
+      : {
+          ok: true,
+          detail:
+            "agent profiles named in the sheet exist in the agents directory or the plugin; this does not prove Vibe binds them",
+        };
   },
 };
 
